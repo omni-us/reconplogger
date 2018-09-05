@@ -15,12 +15,11 @@ REQUIRED = ['logmatic-python==0.1.7', 'python-json-logger==0.1.9']
 
 setup(
     name=NAME,
-    version=VERSION
+    version=VERSION,
     description=DESCRIPTION,
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     author=AUTHOR,
     author_email=EMAIL,
-    url=URL,
     packages=find_packages(exclude=('tests',)),
     install_requires=REQUIRED,
     include_package_data=True,
