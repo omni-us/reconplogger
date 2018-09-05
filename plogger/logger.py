@@ -34,3 +34,26 @@ class Logger:
             logger.handlers = []
             logger.addHandler(handlers[1])
         return logger
+
+    def get_logger(self, json=False):
+        '''This method sets the configuration for the logger
+        
+        Keyword Arguments:
+            json {bool} -- If the logger should convert the logs into json format (default: {False})
+        
+        Returns:
+            [Logger] --  An instance of Logging with the right handlers set
+        '''
+
+        logging.config.dictConfig(LOGGING_APPLICATION_CONF)
+        logger = logging.getLogger()
+        handlers = logger.handlers
+        if json:
+            handler = logging.StreamHandler()
+            logger.handlers = []
+            logger.addHandler(handlers[0])
+        else:
+            handler = logging.StreamHandler()
+            logger.handlers = []
+            logger.addHandler(handlers[1])
+        return logger
