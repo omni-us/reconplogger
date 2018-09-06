@@ -27,9 +27,13 @@ LOGGING_APPLICATION_CONF = {
         }
     },
     'loggers': {
-        '': {  # 'root' logge
+        'app': {  # 'root' logge
             'level': 'DEBUG',
             'handlers': ['json', 'console']
+        },
+        'http': {  # 'root' logge
+            'level': 'DEBUG',
+            'handlers': ['json']
         }
     }
 }
