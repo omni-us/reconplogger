@@ -1,56 +1,62 @@
+import unittest
 from plogger.logger import Logger
+import sys
+import io
 
 
-def test_info():
-    logging.info("Hello world")
+class TestPlogger(unittest.TestCase):
+    def test_normal_logger(self):
+        out = io.StringIO()
+        LOGGER = Logger().get_logger()
+        test_string = 'Hello World'
+        LOGGER.info(test_string)
+        output = out.getvalue().strip()
+        if test_string in output:
+            return True
+        else:
+            return False
+
+    def test_json_logger(self):
+        out = io.StringIO()
+        LOGGER = Logger().get_logger(json=True)
+        test_string = 'Hello World'
+        LOGGER.info(test_string)
+        output = out.getvalue().strip()
+        if "message" in output:
+            return True
+        else:
+            return False
+
+    def test_logger_with_exception(self):
+        try:
+            out = io.StringIO()
+            LOGGER = Logger().get_logger(json=True)
+            a = 100
+            b = 0
+            c = a/b
+        except Exception as e:
+            LOGGER.error("Exception has occured", exc_info=True)
+            output = out.getvalue().strip()
+            if "ZeroDivisionError" in output:
+                return True
+            else:
+                return False
+
+    def test_json_logger_with_exception(self):
+        try:
+            out = io.StringIO()
+            LOGGER = Logger().get_logger(json=True)
+            a = 100
+            b = 0
+            c = a/b
+        except Exception as e:
+            LOGGER.error("Exception has occured", exc_info=True)
+            output = out.getvalue().strip()
+            if "exc_info" in output:
+                return True
+            else:
+                return False
 
 
-def test_debug():
-    logging.debug("Hello world")
-
-
-def test_error():
-    logging.error("Hello world")
-
-
-def test_critical():
-    logging.critical("Hello world")
-
-
-def test_exception():
-    try:
-        a = 100
-        b = 100 / 0
-    except Exception as e:
-        logging.error(e)
-
-
-def test_exception_with_trace():
-    try:
-        a = 100
-        b = 100 / 0
-    except Exception as e:
-        logging.error("Exception has occured", exc_info=True)
-
-
-def test_logging_with_context():
-    logging.info("Hello world", extra={"context check":'check'})
-
-
-logging = Logger().get_logger()
-test_info()
-test_debug()
-test_error()
-test_critical()
-test_exception()
-test_exception_with_trace()
-test_logging_with_context()
-
-logging = Logger().get_logger(json=True)
-test_info()
-test_debug()
-test_error()
-test_critical()
-test_exception()
-test_exception_with_trace()
-test_logging_with_context()
+if __name__ == "__main__":
+    unittest.main()
