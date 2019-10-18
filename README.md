@@ -133,7 +133,6 @@ all microservices developed. Thus, the logging from all microservices should be
 configured like explained here. All important sources of logs should be
 reconfigured, so that all logs have a common format and can be properly indexed.
 
-
 .. code-block:: python
 
     import os
@@ -161,6 +160,10 @@ reconfigured, so that all logs have a common format and can be properly indexed.
     myclass = MyClass(..., logger=logger)
 
     ...
+
+Another important note is that after configuring the logger, the code should not
+modify the logger configuration. For example, do not change the logging level.
+
 
 
 Contributing
