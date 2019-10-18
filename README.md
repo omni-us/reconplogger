@@ -136,6 +136,7 @@ reconfigured, so that all logs have a common format and can be properly indexed.
 .. code-block:: python
 
     import os
+    import logging
     import plogger
     from flask import Flask
 
@@ -145,25 +146,35 @@ reconfigured, so that all logs have a common format and can be properly indexed.
 
     ...
 
-    ## Configure logging
-    logging = plogger.load_config('PLOGGER_CFG')
-    plogger_name = os.environ['PLOGGER_NAME']
+    ## Only use plogger if environment variables defined
+    if 'PLOGGER_CFG' not in os.environ or 'PLOGGER_NAME' not in os.environ:
+        logger = logging.getLogger('myapp')
 
-    ## Replace flask logger
-    app.logger = logging.getLogger(plogger_name)
+    else:
+        ## Configure logging
+        plogger.load_config('PLOGGER_CFG')
+        plogger_name = os.environ['PLOGGER_NAME']
 
-    ## Replace werkzeug logger handlers
-    plogger.replace_logger_handlers('werkzeug', plogger_name)
+        ## Replace flask logger
+        app.logger = logging.getLogger(plogger_name)
 
-    ## Use configured logger in service
-    logger = logging.getLogger(plogger_name)
+        ## Replace werkzeug logger handlers
+        plogger.replace_logger_handlers('werkzeug', plogger_name)
+
+        ## Get configured logger for use in service
+        logger = logging.getLogger(plogger_name)
+
+    ## NOTE: do not change logger beyond this point!
+
+    ...
+
+    ## Use
     myclass = MyClass(..., logger=logger)
 
     ...
 
-Another important note is that after configuring the logger, the code should not
+An important note is that after configuring the logger, the code should not
 modify the logger configuration. For example, do not change the logging level.
-
 
 
 Contributing
