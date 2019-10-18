@@ -1,95 +1,201 @@
-## Plogger - omnius python logger
+plogger - omni:us python logger
+===============================
 
-This repository contains code of a standard python logging library with standard template to be used across experiments and services.
-Repository supports:
+This repository contains the code of plogger, a python package to ease the
+standardization of logging within omni:us. The main design decision of plogger
+is to allow total freedom to reconfigure loggers without hard coding anything.
 
-* Application Logging
+The package contains essentially three things:
 
-* HTTP logging
-
-### Install from internal pypi repository
-```pip install plogger --trusted-host 35.189.220.104```
-
-# Application Logger
-
-## How to use :
-
-In the ```___init__.py``` of your project create an instance of the plogger application logger as following:
-``` 
-    from plogger.logger import Logger
-
-    logger = Logger().get_logger() // if you do not require logs to be pushed as json
-    logger = Logger().get_logger(json=True) // if you want the logs to be pushed as json
-```
+- A default logging configuration.
+- A function to load logging configuration from any of: config file, environment variable, or default.
+- A function to replace the handlers of an existing Logger object.
 
 
-
-**Application logs in JSON format**:
-```
-{"asctime": "2018-09-05 17:38:38,137", "levelname": "INFO", "filename": "test_formatter.py", "lineno": 5, "message": "Hello world"}
-{"asctime": "2018-09-05 17:38:38,137", "levelname": "DEBUG", "filename": "test_formatter.py", "lineno": 9, "message": "Hello world"}
-{"asctime": "2018-09-05 17:38:38,137", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 13, "message": "Hello world"}
-{"asctime": "2018-09-05 17:38:38,137", "levelname": "CRITICAL", "filename": "test_formatter.py", "lineno": 17, "message": "Hello world"}
-{"asctime": "2018-09-05 17:38:38,137", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 25, "message": "division by zero"}
-{"asctime": "2018-09-05 17:38:38,138", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 33, "message": "Exception has occured", "exc_info": "Traceback (most recent call last):\n  File \"plogger/tests/test_formatter.py\", line 31, in test_exception_with_trace\n    b = 100 / 0\nZeroDivisionError: division by zero"}
-{"asctime": "2018-09-05 17:38:38,138", "levelname": "INFO", "filename": "test_formatter.py", "lineno": 37, "message": "Hello world", "context check": "check"}
-```
-
-**Application logs in standard out format**:
-```
-2018-09-05 17:38:38,136 INFO -- test_formatter.py:5 -- Hello world
-2018-09-05 17:38:38,136 DEBUG -- test_formatter.py:9 -- Hello world
-2018-09-05 17:38:38,136 ERROR -- test_formatter.py:13 -- Hello world
-2018-09-05 17:38:38,137 CRITICAL -- test_formatter.py:17 -- Hello world
-2018-09-05 17:38:38,137 ERROR -- test_formatter.py:25 -- division by zero
-2018-09-05 17:38:38,137 ERROR -- test_formatter.py:33 -- Exception has occured
-Traceback (most recent call last):
-  File "plogger/tests/test_formatter.py", line 31, in test_exception_with_trace
-    b = 100 / 0
-ZeroDivisionError: division by zero
-
-```
-
-# HTTP Logger
-
-## How to use
+How to use
+==========
 
 
-In the ```___init__.py``` of your project create an instance of the plogger http logger as following:
-``` 
-from plogger.http_logger import HTTP_Logger
+Add as requirement
+------------------
 
-logger = HTTP_Logger() // instatiate an instance of HTTP logger
+The first step to use plogger is adding it as a requirement in the respective
+package where it will be used. This means adding it in the file `setup.cfg` as
+an item in `install_requires` or in an `extras_require` depending on whether
+plogger is intended to be a core or an optional requirement.
 
-'''
-use the info method of the HTTP logger
-if http method call is success use exception parameter as None
-'''
+Note: It is highly discouraged develop packages in which requirements are added
+directly to `setup.py` or to have an ambiguous `requirements.txt` file.
 
-logger.info(uuid='abcabcbabca', http_endpoint='/home',
-            http_response_code='200', http_method='add_module', http_response_size='1.5kb', http_input_payload_size='1mb',
-            http_input_payload_type='file', http_response_time='10ms', message="Testing HTTP Logger", hostname='local', exception=None) 
 
-'''
-if http method call is failure pass the exception object as parameter
-'''
+Loading configuration
+---------------------
 
-try:
-    a = 100
-    b = 0
-    c = a/b
-except Exception as e:
-    logger.info(uuid='abcabcbabca', http_endpoint='/home',
-                http_response_code='200', http_method='add_module', http_response_size='1.5kb', http_input_payload_size='1mb',
-                http_input_payload_type='file', http_response_time='10ms', message="Testing HTTP Logger", hostname='local', exception=e)
-```
+The most important functionality that plogger provides is the func:`load_config`
+function, whose purpose is just to ease loading of a python logging
+configuration. The loading of configuration can be from a file (giving its
+path), from an environment variable (giving the variable name), or loading the
+default configuration that comes with plogger. The loading from file and from
+environment variable expects the format to be yaml or json. See below examples
+of loading for each of the cases:
 
-**HTTP Logs in JSON format**:
+.. code-block:: python
 
-```
-# Without exception
-{"asctime": "2018-09-06 15:43:53,763", "levelname": "INFO", "filename": "http_logger.py", "lineno": 57, "message": "Testing HTTP Logger", "uuid": "abcabcbabca", "http_endpoint": "/home", "http_method": "add_module", "http_response_code": "200", "http_response_size": "1.5kb", "http_input_payload_size": "1mb", "http_input_payload_type": "file", "http_response_time": "10ms", "hostname": "local"}
+    import plogger
 
-# With exception
-{"asctime": "2018-09-06 15:43:53,764", "levelname": "INFO", "filename": "http_logger.py", "lineno": 52, "message": "Testing HTTP Logger", "exc_info": "Traceback (most recent call last):\n  File \"plogger/tests/test_http_logs.py\", line 16, in <module>\n    c = a/b\nZeroDivisionError: division by zero", "uuid": "abcabcbabca", "http_endpoint": "/home", "http_method": "add_module", "http_response_code": "500", "http_response_size": "1.5kb", "http_input_payload_size": "1mb", "http_input_payload_type": "file", "http_response_time": "10ms", "hostname": "local"}
-```
+    ## Load from config file
+    plogger.load_config('/path/to/config.yaml')
+
+    ## Load from environment variable
+    plogger.load_config('PLOGGER_CFG')
+
+    ## Load default config
+    plogger.load_config('plogger_default')
+
+
+Using a configured logger
+-------------------------
+
+After loading a logging configuration, using a logger is as usual with the
+python logging library. Just get the respective logger and use it. The only
+thing to consider is that to allow total freedom to reconfigure loggers without
+hard coding anything, the name of the logger should also be a variable. So,
+a logging configuration might define many handlers and loggers, whose names
+are unknown to the program using plogger. So the name of the logger to use
+should also be given as parameter.
+
+Consider for example that you have an environment variable with the name of the
+logger to use that is defined in a logging configuration defined in another
+environment variable, as follows:
+
+.. code-block:: bash
+
+    export PLOGGER_NAME="example_logger"
+
+    export PLOGGER_CFG="{
+        'version': 1,
+        'formatters': {
+            'verbose': {
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            },
+        },
+        'handlers': {
+            'console':{
+                'level':'DEBUG',
+                'class':'logging.StreamHandler',
+                'formatter': 'verbose'
+            },
+        },
+        'loggers': {
+            'example_logger': {
+                'handlers': ['console'],
+                'level': 'ERROR',
+            },
+        }
+    }"
+
+Then, in the python code the logger would be used as follows:
+
+.. code-block:: python
+
+    >>> import os
+    >>> import plogger
+
+    >>> logging = plogger.load_config('PLOGGER_CFG')
+    >>> logger = logging.getLogger(os.environ['PLOGGER_NAME'])
+
+    >>> logger.error('My error message')
+    ERROR 2019-10-18 14:45:22,629 <stdin> 16876 139918773925696 My error message
+
+
+Replacing logger handlers
+-------------------------
+
+In some cases it might be needed to replace the handlers of some already
+existing logger. For this plogger provides the :func:`replace_logger_handlers`
+function. To use it, simply provide the logger in which to replace the handlers
+and the logger from where to get the handlers. Using the same environment
+variables as above, the procedure would be as follows:
+
+.. code-block:: python
+
+    import plogger
+
+    plogger.load_config('PLOGGER_CFG')
+    plogger.replace_logger_handlers('some_logger_name', os.environ['PLOGGER_NAME'])
+
+
+Standardizing logging in flask-based microservices
+==================================================
+
+The most important objective of plogger is to allow standardization logging from
+all microservices developed. Thus, the logging from all microservices should be
+configured like explained here. All important sources of logs should be
+reconfigured, so that all logs have a common format and can be properly indexed.
+
+
+.. code-block:: python
+
+    import os
+    import plogger
+    from flask import Flask
+
+    ...
+
+    app = Flask(__name__)
+
+    ...
+
+    ## Configure logging
+    logging = plogger.load_config('PLOGGER_CFG')
+    plogger_name = os.environ['PLOGGER_NAME']
+
+    ## Replace flask logger
+    app.logger = logging.getLogger(plogger_name)
+
+    ## Replace werkzeug logger handlers
+    plogger.replace_logger_handlers('werkzeug', plogger_name)
+
+    ## Use configured logger in service
+    logger = logging.getLogger(plogger_name)
+    myclass = MyClass(..., logger=logger)
+
+    ...
+
+
+Contributing
+============
+
+Contributions to this package are very welcome. When you intend to work with the
+source code, note that this project does not include a :code:`requirements.txt`
+file. This is by intention. To make it very clear what are the requirements for
+different use cases, all the requirements of the project are stored in the file
+:code:`setup.cfg`. The basic runtime requirements are defined in section
+:code:`[options]` in the :code:`install_requires` entry. All optional
+requirements are stored in section :code:`[options.extras_require]`. There is a
+:code:`dev` extras require to be used by developers (e.g. requirements to run
+the unit tests) and a :code:`bump` extras require for the maintainer of the
+package.
+
+The recommended way to work with the source code is the following. First clone
+the repository, then create a virtual environment, activate it and finally
+install the development requirements. More precisely the steps would be:
+
+.. code-block:: bash
+
+    git clone ssh://git@code.omnius.corp:7999/bkd/plogger.git
+    cd plogger
+    virtualenv -p python3 venv
+    . venv/bin/activate
+
+The crucial step is installing the requirements which would be done by running:
+
+.. code-block:: bash
+
+    pip3 install --editable .[dev]
+
+After changing the code, always run unit tests as follows:
+
+.. code-block:: bash
+
+    ./setup.py test
