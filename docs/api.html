@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; plogger change_proposal/v1.0.0+4commits/2019.10.18 documentation</title>
+  <title>API Reference &mdash; plogger change_proposal/v1.0.0+5commits/2019.10.21 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                change_proposal/v1.0.0+4commits/2019.10.18
+                change_proposal/v1.0.0+5commits/2019.10.21
               </div>
             
           
@@ -163,14 +163,41 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.plogger.load_config" title="plogger.plogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.plogger.flask_app_logger_setup" title="plogger.plogger.flask_app_logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flask_app_logger_setup</span></code></a>(env_cfg, env_name, …)</p></td>
+<td><p>Sets up a flask app logging configuration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#plogger.plogger.load_config" title="plogger.plogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
 <td><p>Loads a logging configuration from path or environment variable or dictionary object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#plogger.plogger.replace_logger_handlers" title="plogger.plogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.plogger.replace_logger_handlers" title="plogger.plogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
 <td><p>Replaces the handlers of a given logger.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#plogger.plogger.test_logger" title="plogger.plogger.test_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_logger</span></code></a>(logger)</p></td>
+<td><p>Logs one message to each debug, info and warning levels intended for testing.</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="function">
+<dt id="plogger.plogger.flask_app_logger_setup">
+<code class="sig-prename descclassname">plogger.plogger.</code><code class="sig-name descname">flask_app_logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg</em>, <em class="sig-param">env_name</em>, <em class="sig-param">flask_app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger/plogger.html#flask_app_logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.plogger.flask_app_logger_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up a flask app logging configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env_cfg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of environment variable containing the logging configuration.</p></li>
+<li><p><strong>env_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of environment variable containing the logger to use.</p></li>
+<li><p><strong>flask_app</strong> (<em>flask.app.Flask</em>) – The flask app object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The logger object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.8)">logging.Logger</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="function">
 <dt id="plogger.plogger.load_config">
 <code class="sig-prename descclassname">plogger.plogger.</code><code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param">cfg=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger/plogger.html#load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.plogger.load_config" title="Permalink to this definition">¶</a></dt>
@@ -197,6 +224,12 @@
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="plogger.plogger.test_logger">
+<code class="sig-prename descclassname">plogger.plogger.</code><code class="sig-name descname">test_logger</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger/plogger.html#test_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.plogger.test_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logs one message to each debug, info and warning levels intended for testing.</p>
 </dd></dl>
 
 </div>

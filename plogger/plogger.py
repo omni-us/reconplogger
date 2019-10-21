@@ -3,6 +3,7 @@ import os
 import yaml
 import logging
 import logging.config
+from .__version__ import __version__
 
 
 plogger_default = {
@@ -38,7 +39,7 @@ def load_config(cfg=None):
     Returns:
         The logging package object.
     """
-    if cfg is None or cfg == 'plogger_default':
+    if cfg is None or cfg == 'plogger_default' or (cfg in os.environ and os.environ[cfg] == 'plogger_default'):
         cfg_dict = plogger_default
     elif isinstance(cfg, dict):
         cfg_dict = cfg
@@ -87,3 +88,43 @@ def replace_logger_handlers(logger, handlers='plogger'):
 
     ## Replace handlers ##
     logger.handlers = list(handlers)
+
+
+def test_logger(logger):
+    """Logs one message to each debug, info and warning levels intended for testing."""
+    logger.debug('plogger test debug message.')
+    logger.info('plogger test info message.')
+    logger.warning('plogger test warning message.')
+
+
+def flask_app_logger_setup(env_cfg, env_name, flask_app):
+    """Sets up a flask app logging configuration.
+
+    Args:
+        env_cfg (str): Name of environment variable containing the logging configuration.
+        env_name (str): Name of environment variable containing the logger to use.
+        flask_app (flask.app.Flask): The flask app object.
+
+    Returns:
+        logging.Logger: The logger object.
+    """
+    ## Check that environment variables set and not empty ##
+    if not all([v in os.environ and os.environ[v] for v in [env_cfg, env_name]]):
+        flask_app.logger.warning('plogger (v'+__version__+') not configured since environment variables not properly set: '+str(env_cfg)+', '+str(env_name)+'.')
+
+    else:
+        ## Configure logging ##
+        load_config(env_cfg)
+
+        ## Replace flask logger ##
+        plogger_name = os.environ[env_name]
+        flask_app.logger = logging.getLogger(plogger_name)
+
+        ## Replace werkzeug logger handlers ##
+        replace_logger_handlers('werkzeug', plogger_name)
+
+        ## Test logger ##
+        flask_app.logger.info('plogger (v'+__version__+') flask app logger configured.')
+        test_logger(flask_app.logger)
+
+    return flask_app.logger
