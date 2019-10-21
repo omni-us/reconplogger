@@ -158,6 +158,14 @@ reconfigured, so that all logs have a common format and can be properly indexed.
 An important note is that after configuring the logger, the code should not
 modify the logger configuration. For example, do not set the logging level.
 
+In the helm `values.yaml` of the microservice, the default values for the
+envirnoment variables should be set as:
+
+.. code-block:: yaml
+
+    PLOGGER_CFG: plogger_default
+    PLOGGER_NAME: plogger
+
 
 Contributing
 ============
