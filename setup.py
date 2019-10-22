@@ -1,26 +1,7 @@
-from setuptools import setup, find_packages, Command
-import subprocess
-import os
-from plogger import __version__
+#!/usr/bin/env python3
 
-NAME = 'plogger'
-VERSION = __version__
-DESCRIPTION = 'omni:us python logging package'
-#LONG_DESCRIPTION = '\n\n'.join([ open('README.md').read()])
-AUTHOR = 'Nischal Padmanabha'
-EMAIL = 'nischal@omnius.com'
+from setuptools import setup, Command
 
-REQUIRED = ['logmatic-python==0.1.7', 'python-json-logger==0.1.9']
-print("Building package %s version %s"%(NAME, VERSION))
+NAME = next(filter(lambda x: x.startswith('name = '), open('setup.cfg').readlines())).strip().split()[-1]
 
-setup(
-    name=NAME,
-    version=VERSION,
-    description=DESCRIPTION,
-    long_description='',
-    author=AUTHOR,
-    author_email=EMAIL,
-    packages=find_packages(exclude=('tests',)),
-    install_requires=REQUIRED,
-    license='Omnius Copyright'
-)
+setup(version=__import__(NAME+'.__init__').__version__)
