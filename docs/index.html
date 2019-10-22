@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>plogger - omni:us python logger &mdash; plogger change_proposal/v1.0.0+5commits/2019.10.21 documentation</title>
+  <title>plogger - omni:us python logger &mdash; plogger 2.0.1 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                change_proposal/v1.0.0+5commits/2019.10.21
+                2.0.1
               </div>
             
           
@@ -287,6 +287,12 @@ reconfigured, so that all logs have a common format and can be properly indexed.
 </div>
 <p>An important note is that after configuring the logger, the code should not
 modify the logger configuration. For example, do not set the logging level.</p>
+<p>In the helm <cite>values.yaml</cite> of the microservice, the default values for the
+envirnoment variables should be set as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">PLOGGER_CFG</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">plogger_default</span>
+<span class="nt">PLOGGER_NAME</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">plogger</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
@@ -317,6 +323,13 @@ virtualenv -p python3 venv
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./setup.py <span class="nb">test</span>
 </pre></div>
 </div>
+<p>#### Using bump version</p>
+<p>As part of contribution please use bumpversion to bump up the version on master.</p>
+<p><code class="docutils literal notranslate"><span class="pre">`bumpversion</span> <span class="pre">major/minor/path</span> <span class="pre">plogger/__version__.py`</span></code></p>
+<p>Push the tags to the repository as well</p>
+<p><code class="docutils literal notranslate"><span class="pre">`git</span> <span class="pre">push;</span> <span class="pre">git</span> <span class="pre">push</span> <span class="pre">--tags`</span></code></p>
+<p>Create the bdist_whl and push to pypi repository using twine</p>
+<p><code class="docutils literal notranslate"><span class="pre">`twine</span> <span class="pre">upload</span> <span class="pre">--repository-url</span> <span class="pre">https://pypi.omnius.com</span> <span class="pre">--username</span> <span class="pre">jenkins</span> <span class="pre">--password</span> <span class="pre">&quot;&quot;</span> <span class="pre">dist/plogger-&lt;version&gt;-py3-none-any.whl</span> <span class="pre">`</span></code></p>
 </div>
 <div class="section" id="documentation-contents">
 <h1>Documentation Contents<a class="headerlink" href="#documentation-contents" title="Permalink to this headline">¶</a></h1>
