@@ -203,3 +203,18 @@ After changing the code, always run unit tests as follows:
 .. code-block:: bash
 
     ./setup.py test
+
+#### Using bump version
+
+As part of contribution please use bumpversion to bump up the version on master.
+
+```bumpversion major/minor/path plogger/__version__.py```
+
+Push the tags to the repository as well 
+
+```git push; git push --tags```
+
+Create the bdist_whl and push to pypi repository using twine
+
+```twine upload --repository-url https://pypi.omnius.com --username jenkins --password "" dist/plogger-<version>-py3-none-any.whl ```
+
