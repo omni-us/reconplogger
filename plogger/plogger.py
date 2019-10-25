@@ -7,26 +7,39 @@ from .__version__ import __version__
 
 
 plogger_default = {
-    'version': 1,  # required
+    'version': 1,
     'formatters': {
+        'plain': {
+            'format': '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s',
+        },
         'json': {
             'format': '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s',
             'class': 'logmatic.jsonlogger.JsonFormatter'
-        }
+        },
     },
     'handlers': {
+        'plain': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'plain',
+        },
         'json': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'json'
+            'formatter': 'json',
         },
     },
     'loggers': {
+        'plogger_plain': {
+            'handlers': ['plain'],
+        },
+        'plogger_json': {
+            'handlers': ['json'],
+        },
         'plogger': {
-            'level': 'DEBUG',
-            'handlers': ['json']
-        }
-    }
+            'handlers': ['json'],
+        },
+    },
 }
 
 
@@ -97,8 +110,35 @@ def test_logger(logger):
     logger.warning('plogger test warning message.')
 
 
+def logger_setup(env_cfg=None, env_name=None):
+    """Sets up logging configuration and returns the logger.
+
+    If env_cfg is unset, the default plogger config is used. If env_name is
+    unset, 'plogger_plain' logger is used.
+
+    Args:
+        env_cfg (str): Name of environment variable containing the logging configuration.
+        env_name (str): Name of environment variable containing the logger to use.
+
+    Returns:
+        logging.Logger: The logger object.
+    """
+
+    ## Configure logging ##
+    load_config(None if env_cfg is None else os.getenv(env_cfg))
+
+    ## Get logger ##
+    logger = logging.getLogger(os.getenv(env_name) if env_name in os.environ else 'plogger_plain')
+
+    ## Log configured done and test logger ##
+    logger.info('plogger (v'+__version__+') logger configured.')
+    test_logger(logger)
+
+    return logger
+
+
 def flask_app_logger_setup(env_cfg, env_name, flask_app):
-    """Sets up a flask app logging configuration.
+    """Sets up logging configuration, configures flask to use it, and returns the logger.
 
     Args:
         env_cfg (str): Name of environment variable containing the logging configuration.
@@ -108,23 +148,14 @@ def flask_app_logger_setup(env_cfg, env_name, flask_app):
     Returns:
         logging.Logger: The logger object.
     """
-    ## Check that environment variables set and not empty ##
-    if not all([v in os.environ and os.environ[v] for v in [env_cfg, env_name]]):
-        flask_app.logger.warning('plogger (v'+__version__+') not configured since environment variables not properly set: '+str(env_cfg)+', '+str(env_name)+'.')
 
-    else:
-        ## Configure logging ##
-        load_config(env_cfg)
+    ## Configure logging and get logger ##
+    logger = logger_setup(env_cfg, env_name)
 
-        ## Replace flask logger ##
-        plogger_name = os.environ[env_name]
-        flask_app.logger = logging.getLogger(plogger_name)
+    ## Replace flask logger ##
+    flask_app.logger = logger
 
-        ## Replace werkzeug logger handlers ##
-        replace_logger_handlers('werkzeug', plogger_name)
+    ## Replace werkzeug logger handlers ##
+    replace_logger_handlers('werkzeug', os.getenv(env_name, 'plogger_plain'))
 
-        ## Test logger ##
-        flask_app.logger.info('plogger (v'+__version__+') flask app logger configured.')
-        test_logger(flask_app.logger)
-
-    return flask_app.logger
+    return logger
