@@ -19,24 +19,25 @@ plogger_default = {
     },
     'handlers': {
         'plain': {
-            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'plain',
         },
         'json': {
-            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'json',
         },
     },
     'loggers': {
         'plogger_plain': {
+            'level': 'DEBUG',
             'handlers': ['plain'],
         },
         'plogger_json': {
+            'level': 'DEBUG',
             'handlers': ['json'],
         },
         'plogger': {
+            'level': 'DEBUG',
             'handlers': ['json'],
         },
     },
