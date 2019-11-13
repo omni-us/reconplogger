@@ -3,17 +3,21 @@ import os
 import yaml
 import logging
 import logging.config
-from .__version__ import __version__
 
+
+__version__ = '2.0.1'
+
+
+plogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
 
 plogger_default = {
     'version': 1,
     'formatters': {
         'plain': {
-            'format': '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s',
+            'format': plogger_format,
         },
         'json': {
-            'format': '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s',
+            'format': plogger_format,
             'class': 'logmatic.jsonlogger.JsonFormatter'
         },
     },
@@ -102,6 +106,21 @@ def replace_logger_handlers(logger, handlers='plogger'):
 
     ## Replace handlers ##
     logger.handlers = list(handlers)
+
+
+def add_file_handler(logger, file_path, format=plogger_format, level=logging.DEBUG):
+    """Adds a file handler to a given logger.
+
+    Args:
+        logger (logging.Logger): Logger object where to add the file handler.
+        file_path (str): Path to log file for handler.
+        format (str): Format for logging.
+        level (int): Logging level for the handler.
+    """
+    fileHandler = logging.FileHandler(file_path)
+    fileHandler.setFormatter(logging.Formatter(format))
+    fileHandler.setLevel(level)
+    logger.addHandler(fileHandler)
 
 
 def test_logger(logger):

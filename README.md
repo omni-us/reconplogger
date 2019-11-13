@@ -165,6 +165,18 @@ example::
         logger.critical('Failed to run task', exc_info=True)
 
 
+Adding a file handler
+---------------------
+
+In some circumstances it is desired to add to a logger a file handler so that
+the logging messages are also saved to a file. This normally requires at least
+three lines of code, thus to simplify things plogger provides the
+:func:`plogger.add_file_handler` function to do the same with a single line of
+code. The use is quite straightforward as::
+
+    plogger.add_file_handler(logger, '/path/to/log/file.log')
+
+
 Overriding logging configuration
 --------------------------------
 
