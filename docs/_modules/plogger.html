@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>plogger.plogger &mdash; plogger 2.0.1 documentation</title>
+  <title>plogger &mdash; plogger 2.1.0 documentation</title>
   
 
   
@@ -17,24 +17,24 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
     
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -48,7 +48,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home"> plogger
+            <a href="../index.html" class="icon icon-home"> plogger
           
 
           
@@ -58,14 +58,14 @@
             
             
               <div class="version">
-                2.0.1
+                2.1.0
               </div>
             
           
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -83,7 +83,7 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
 </ul>
 
             
@@ -98,7 +98,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">plogger</a>
+          <a href="../index.html">plogger</a>
         
       </nav>
 
@@ -127,11 +127,11 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
         
-      <li>plogger.plogger</li>
+      <li>plogger</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -146,40 +146,58 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for plogger.plogger</h1><div class="highlight"><pre>
+  <h1>Source code for plogger</h1><div class="highlight"><pre>
 <span></span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">logging.config</span>
-<span class="kn">from</span> <span class="nn">.__version__</span> <span class="k">import</span> <span class="n">__version__</span>
 
+
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;2.1.0&#39;</span>
+
+
+<span class="n">plogger_format</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="se">\t</span><span class="si">%(levelname)s</span><span class="s1"> -- </span><span class="si">%(filename)s</span><span class="s1">:</span><span class="si">%(lineno)s</span><span class="s1"> -- </span><span class="si">%(message)s</span><span class="s1">&#39;</span>
 
 <span class="n">plogger_default</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># required</span>
+    <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="s1">&#39;formatters&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;plain&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="n">plogger_format</span><span class="p">,</span>
+        <span class="p">},</span>
         <span class="s1">&#39;json&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="se">\t</span><span class="si">%(levelname)s</span><span class="s1"> -- </span><span class="si">%(filename)s</span><span class="s1">:</span><span class="si">%(lineno)s</span><span class="s1"> -- </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="n">plogger_format</span><span class="p">,</span>
             <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;logmatic.jsonlogger.JsonFormatter&#39;</span>
-        <span class="p">}</span>
+        <span class="p">},</span>
     <span class="p">},</span>
     <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;json&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;plain&#39;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;logging.StreamHandler&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;formatter&#39;</span><span class="p">:</span> <span class="s1">&#39;json&#39;</span>
+            <span class="s1">&#39;formatter&#39;</span><span class="p">:</span> <span class="s1">&#39;plain&#39;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;json&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;logging.StreamHandler&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;formatter&#39;</span><span class="p">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">},</span>
     <span class="s1">&#39;loggers&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;plogger_plain&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;plain&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;plogger_json&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;json&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
         <span class="s1">&#39;plogger&#39;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;json&#39;</span><span class="p">]</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+            <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;json&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="load_config"><a class="viewcode-back" href="../../api.html#plogger.plogger.load_config">[docs]</a><span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="load_config"><a class="viewcode-back" href="../api.html#plogger.load_config">[docs]</a><span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Loads a logging configuration from path or environment variable or dictionary object.</span>
 
 <span class="sd">    Args:</span>
@@ -209,7 +227,7 @@
     <span class="k">return</span> <span class="n">logging</span></div>
 
 
-<div class="viewcode-block" id="replace_logger_handlers"><a class="viewcode-back" href="../../api.html#plogger.plogger.replace_logger_handlers">[docs]</a><span class="k">def</span> <span class="nf">replace_logger_handlers</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">handlers</span><span class="o">=</span><span class="s1">&#39;plogger&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="replace_logger_handlers"><a class="viewcode-back" href="../api.html#plogger.replace_logger_handlers">[docs]</a><span class="k">def</span> <span class="nf">replace_logger_handlers</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">handlers</span><span class="o">=</span><span class="s1">&#39;plogger&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Replaces the handlers of a given logger.</span>
 
 <span class="sd">    Args:</span>
@@ -239,15 +257,57 @@
     <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">handlers</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="test_logger"><a class="viewcode-back" href="../../api.html#plogger.plogger.test_logger">[docs]</a><span class="k">def</span> <span class="nf">test_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
+<div class="viewcode-block" id="add_file_handler"><a class="viewcode-back" href="../api.html#plogger.add_file_handler">[docs]</a><span class="k">def</span> <span class="nf">add_file_handler</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">plogger_format</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a file handler to a given logger.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        logger (logging.Logger): Logger object where to add the file handler.</span>
+<span class="sd">        file_path (str): Path to log file for handler.</span>
+<span class="sd">        format (str): Format for logging.</span>
+<span class="sd">        level (int): Logging level for the handler.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fileHandler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">fileHandler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="nb">format</span><span class="p">))</span>
+    <span class="n">fileHandler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">fileHandler</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test_logger"><a class="viewcode-back" href="../api.html#plogger.test_logger">[docs]</a><span class="k">def</span> <span class="nf">test_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Logs one message to each debug, info and warning levels intended for testing.&quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;plogger test debug message.&#39;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plogger test info message.&#39;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;plogger test warning message.&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="flask_app_logger_setup"><a class="viewcode-back" href="../../api.html#plogger.plogger.flask_app_logger_setup">[docs]</a><span class="k">def</span> <span class="nf">flask_app_logger_setup</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">flask_app</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Sets up a flask app logging configuration.</span>
+<div class="viewcode-block" id="logger_setup"><a class="viewcode-back" href="../api.html#plogger.logger_setup">[docs]</a><span class="k">def</span> <span class="nf">logger_setup</span><span class="p">(</span><span class="n">env_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets up logging configuration and returns the logger.</span>
+
+<span class="sd">    If env_cfg is unset, the default plogger config is used. If env_name is</span>
+<span class="sd">    unset, &#39;plogger_plain&#39; logger is used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env_cfg (str): Name of environment variable containing the logging configuration.</span>
+<span class="sd">        env_name (str): Name of environment variable containing the logger to use.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        logging.Logger: The logger object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">## Configure logging ##</span>
+    <span class="n">load_config</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">env_cfg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">))</span>
+
+    <span class="c1">## Get logger ##</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">env_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">else</span> <span class="s1">&#39;plogger_plain&#39;</span><span class="p">)</span>
+
+    <span class="c1">## Log configured done and test logger ##</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plogger (v&#39;</span><span class="o">+</span><span class="n">__version__</span><span class="o">+</span><span class="s1">&#39;) logger configured.&#39;</span><span class="p">)</span>
+    <span class="n">test_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">logger</span></div>
+
+
+<div class="viewcode-block" id="flask_app_logger_setup"><a class="viewcode-back" href="../api.html#plogger.flask_app_logger_setup">[docs]</a><span class="k">def</span> <span class="nf">flask_app_logger_setup</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">flask_app</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets up logging configuration, configures flask to use it, and returns the logger.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        env_cfg (str): Name of environment variable containing the logging configuration.</span>
@@ -257,26 +317,17 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        logging.Logger: The logger object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1">## Check that environment variables set and not empty ##</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">v</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">[</span><span class="n">env_cfg</span><span class="p">,</span> <span class="n">env_name</span><span class="p">]]):</span>
-        <span class="n">flask_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;plogger (v&#39;</span><span class="o">+</span><span class="n">__version__</span><span class="o">+</span><span class="s1">&#39;) not configured since environment variables not properly set: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;, &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
 
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1">## Configure logging ##</span>
-        <span class="n">load_config</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">)</span>
+    <span class="c1">## Configure logging and get logger ##</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logger_setup</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">,</span> <span class="n">env_name</span><span class="p">)</span>
 
-        <span class="c1">## Replace flask logger ##</span>
-        <span class="n">plogger_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">env_name</span><span class="p">]</span>
-        <span class="n">flask_app</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">plogger_name</span><span class="p">)</span>
+    <span class="c1">## Replace flask logger ##</span>
+    <span class="n">flask_app</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
 
-        <span class="c1">## Replace werkzeug logger handlers ##</span>
-        <span class="n">replace_logger_handlers</span><span class="p">(</span><span class="s1">&#39;werkzeug&#39;</span><span class="p">,</span> <span class="n">plogger_name</span><span class="p">)</span>
+    <span class="c1">## Replace werkzeug logger handlers ##</span>
+    <span class="n">replace_logger_handlers</span><span class="p">(</span><span class="s1">&#39;werkzeug&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="s1">&#39;plogger_plain&#39;</span><span class="p">))</span>
 
-        <span class="c1">## Test logger ##</span>
-        <span class="n">flask_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plogger (v&#39;</span><span class="o">+</span><span class="n">__version__</span><span class="o">+</span><span class="s1">&#39;) flask app logger configured.&#39;</span><span class="p">)</span>
-        <span class="n">test_logger</span><span class="p">(</span><span class="n">flask_app</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">flask_app</span><span class="o">.</span><span class="n">logger</span></div>
+    <span class="k">return</span> <span class="n">logger</span></div>
 </pre></div>
 
            </div>

@@ -4,7 +4,7 @@ API Reference
 plogger module
 --------------
 
-.. automodule:: plogger.plogger
+.. automodule:: plogger
     :members:
     :undoc-members:
     :show-inheritance:

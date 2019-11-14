@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; plogger 2.0.1 documentation</title>
+  <title>API Reference &mdash; plogger 2.1.0 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                2.0.1
+                2.1.0
               </div>
             
           
@@ -85,7 +85,7 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-plogger.plogger">plogger module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-plogger">plogger module</a></li>
 </ul>
 </li>
 </ul>
@@ -154,8 +154,8 @@
             
   <div class="section" id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-plogger.plogger">
-<span id="plogger-module"></span><h2>plogger module<a class="headerlink" href="#module-plogger.plogger" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-plogger">
+<span id="plogger-module"></span><h2>plogger module<a class="headerlink" href="#module-plogger" title="Permalink to this headline">¶</a></h2>
 <p><strong>Functions</strong></p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -163,24 +163,46 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.plogger.flask_app_logger_setup" title="plogger.plogger.flask_app_logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flask_app_logger_setup</span></code></a>(env_cfg, env_name, …)</p></td>
-<td><p>Sets up a flask app logging configuration.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.add_file_handler" title="plogger.add_file_handler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_file_handler</span></code></a>(logger, file_path[, …])</p></td>
+<td><p>Adds a file handler to a given logger.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#plogger.plogger.load_config" title="plogger.plogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#plogger.flask_app_logger_setup" title="plogger.flask_app_logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flask_app_logger_setup</span></code></a>(env_cfg, env_name, …)</p></td>
+<td><p>Sets up logging configuration, configures flask to use it, and returns the logger.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.load_config" title="plogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
 <td><p>Loads a logging configuration from path or environment variable or dictionary object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.plogger.replace_logger_handlers" title="plogger.plogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#plogger.logger_setup" title="plogger.logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger_setup</span></code></a>([env_cfg, env_name])</p></td>
+<td><p>Sets up logging configuration and returns the logger.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.replace_logger_handlers" title="plogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
 <td><p>Replaces the handlers of a given logger.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#plogger.plogger.test_logger" title="plogger.plogger.test_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_logger</span></code></a>(logger)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#plogger.test_logger" title="plogger.test_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_logger</span></code></a>(logger)</p></td>
 <td><p>Logs one message to each debug, info and warning levels intended for testing.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="function">
-<dt id="plogger.plogger.flask_app_logger_setup">
-<code class="sig-prename descclassname">plogger.plogger.</code><code class="sig-name descname">flask_app_logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg</em>, <em class="sig-param">env_name</em>, <em class="sig-param">flask_app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger/plogger.html#flask_app_logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.plogger.flask_app_logger_setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets up a flask app logging configuration.</p>
+<dt id="plogger.add_file_handler">
+<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">add_file_handler</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">file_path</em>, <em class="sig-param">format='%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'</em>, <em class="sig-param">level=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#add_file_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a file handler to a given logger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logger</strong> (<a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.8)"><em>logging.Logger</em></a>) – Logger object where to add the file handler.</p></li>
+<li><p><strong>file_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Path to log file for handler.</p></li>
+<li><p><strong>format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Format for logging.</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Logging level for the handler.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="plogger.flask_app_logger_setup">
+<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">flask_app_logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg</em>, <em class="sig-param">env_name</em>, <em class="sig-param">flask_app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#flask_app_logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.flask_app_logger_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up logging configuration, configures flask to use it, and returns the logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -199,8 +221,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.plogger.load_config">
-<code class="sig-prename descclassname">plogger.plogger.</code><code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param">cfg=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger/plogger.html#load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.plogger.load_config" title="Permalink to this definition">¶</a></dt>
+<dt id="plogger.load_config">
+<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param">cfg=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.load_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a logging configuration from path or environment variable or dictionary object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -213,8 +235,30 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.plogger.replace_logger_handlers">
-<code class="sig-prename descclassname">plogger.plogger.</code><code class="sig-name descname">replace_logger_handlers</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">handlers='plogger'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger/plogger.html#replace_logger_handlers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.plogger.replace_logger_handlers" title="Permalink to this definition">¶</a></dt>
+<dt id="plogger.logger_setup">
+<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg=None</em>, <em class="sig-param">env_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.logger_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up logging configuration and returns the logger.</p>
+<p>If env_cfg is unset, the default plogger config is used. If env_name is
+unset, ‘plogger_plain’ logger is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env_cfg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of environment variable containing the logging configuration.</p></li>
+<li><p><strong>env_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of environment variable containing the logger to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The logger object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.8)">logging.Logger</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="plogger.replace_logger_handlers">
+<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">replace_logger_handlers</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">handlers='plogger'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#replace_logger_handlers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.replace_logger_handlers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replaces the handlers of a given logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -227,8 +271,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.plogger.test_logger">
-<code class="sig-prename descclassname">plogger.plogger.</code><code class="sig-name descname">test_logger</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger/plogger.html#test_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.plogger.test_logger" title="Permalink to this definition">¶</a></dt>
+<dt id="plogger.test_logger">
+<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">test_logger</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#test_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.test_logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logs one message to each debug, info and warning levels intended for testing.</p>
 </dd></dl>
 
