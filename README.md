@@ -8,12 +8,20 @@ is to allow total freedom to reconfigure loggers without hard coding anything.
 The package contains essentially three things:
 
 - A default logging configuration.
-- A function to load logging configuration from any of: config file, environment variable, or default.
-- A function to replace the handlers of an existing Logger object.
+- A function for loading logging configuration for regular python code.
+- A function for loading logging configuration for flask-based microservices.
+- Lower level functions for:
+
+  - Loading logging configuration from any of: config file, environment variable, or default.
+  - Replacing the handlers of an existing Logger object.
 
 
 How to use
 ==========
+
+There are two main use cases plogger targets. One is for logging in regular
+generic python code and the second one is logging in microservices. See the two
+standardizing sections below for a detailed explanation of the two use cases.
 
 
 Add as requirement
@@ -24,49 +32,159 @@ package where it will be used. This means adding it in the file `setup.cfg` as
 an item in `install_requires` or in an `extras_require` depending on whether
 plogger is intended to be a core or an optional requirement.
 
-Note: It is highly discouraged develop packages in which requirements are added
-directly to `setup.py` or to have an ambiguous `requirements.txt` file.
+Note: It is highly discouraged to develop packages in which requirements are
+added directly to `setup.py` or to have an ambiguous `requirements.txt` file.
+See the `setup.cfg` file in the plogger source code for reference.
 
 
-Loading configuration
----------------------
+Default logging configuration
+-----------------------------
 
-The most important functionality that plogger provides is the func:`load_config`
-function, whose purpose is just to ease loading of a python logging
-configuration. The loading of configuration can be from a file (giving its
-path), from an environment variable (giving the variable name), or loading the
-default configuration that comes with plogger. The loading from file and from
-environment variable expects the format to be yaml or json. See below examples
-of loading for each of the cases:
+An feature that plogger provides is the possibility of externally setting the
+logging configuration without having to change code or implement any parsing of
+configuration. However, if a logging configuration is not given externally,
+plogger provide a default configuration.
+
+The default configuration defines two handlers, both of which are stream
+handlers and are set to DEBUG log level. The first handler called `plain` uses a
+simple plain text formatter, and the second handler called `json` as the name
+suggests outputs in json format using the `logmatic
+<https://pypi.org/project/logmatic-python/>`_ JsonFormatter class.
+
+For each handler the default configuration defines a corresponding logger:
+:code:`plogger_plain` and :code:`plogger_json`.
+
+
+Standardizing logging in regular python
+---------------------------------------
+
+One objective of plogger is to ease the use of logging and standardize the way
+it is done across all omni:us python code. The use of plogger comes down to
+calling one function to get the logger object. For regular python code (i.e. not
+a microservice) the function to use is :func:`plogger.logger_setup`. To this
+function you give as argument two strings, which are names of environment
+variables, one for the logging configuration and the other for the name of the
+logger to use. The following code snippet illustrates the use:
 
 .. code-block:: python
 
     import plogger
 
-    ## Load from config file
-    plogger.load_config('/path/to/config.yaml')
+    ...
 
-    ## Load from environment variable
-    plogger.load_config('PLOGGER_CFG')
+    logger = plogger.logger_setup('PLOGGER_CFG', 'PLOGGER_NAME')
 
-    ## Load default config
-    plogger.load_config('plogger_default')
+    ...
+
+    logger.info('My log message')
+
+If the environment variables are not set, this function returns the
+:code:`plogger_plain` logger from the default configuration.
 
 
-Using a configured logger
--------------------------
+Standardizing logging in flask-based microservices
+--------------------------------------------------
 
-After loading a logging configuration, using a logger is as usual with the
-python logging library. Just get the respective logger and use it. The only
-thing to consider is that to allow total freedom to reconfigure loggers without
-hard coding anything, the name of the logger should also be a variable. So,
-a logging configuration might define many handlers and loggers, whose names
-are unknown to the program using plogger. So the name of the logger to use
-should also be given as parameter.
+The most important objective of plogger is to allow standardization of a
+structured logging format for all microservices developed. Thus, the logging
+from all microservices should be configured like explained here. The use is
+analogous to the previous case, but using the
+:func:`plogger.flask_app_logger_setup` instead, and giving as a third argument
+the flask app object. Additional to the previous case, this function replaces
+the flask app and werkzeug loggers to use a plogger configured one. The usage
+would be as follows:
 
-Consider for example that you have an environment variable with the name of the
-logger to use that is defined in a logging configuration defined in another
-environment variable, as follows:
+.. code-block:: python
+
+    import plogger
+    from flask import Flask
+
+    ...
+
+    app = Flask(__name__)
+
+    ...
+
+    logger = plogger.flask_app_logger_setup('PLOGGER_CFG', 'PLOGGER_NAME', app)
+
+    ## NOTE: do not change logger beyond this point!
+
+    ...
+
+    ## Use logger in code
+    myclass = MyClass(..., logger=logger)
+
+    ...
+
+An important note is that after configuring the logger, the code should not
+modify the logger configuration. For example, the logging level should not be
+modified, or only modified by providing a non-default option. Adding an
+additional handler to the logger is not a problem. This could be desired for
+example to also log to a file.
+
+In the helm `values.yaml` file of the microservice, the default values for the
+environment variables should be set as:
+
+.. code-block:: yaml
+
+    PLOGGER_CFG: plogger_default
+    PLOGGER_NAME: plogger_json
+
+With the :code:`plogger_json` logger, the format of the logs should look
+something like the following::
+
+    {"asctime": "2018-09-05 17:38:38,137", "levelname": "INFO", "filename": "test_formatter.py", "lineno": 5, "message": "Hello world"}
+    {"asctime": "2018-09-05 17:38:38,137", "levelname": "DEBUG", "filename": "test_formatter.py", "lineno": 9, "message": "Hello world"}
+    {"asctime": "2018-09-05 17:38:38,137", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 13, "message": "Hello world"}
+    {"asctime": "2018-09-05 17:38:38,137", "levelname": "CRITICAL", "filename": "test_formatter.py", "lineno": 17, "message": "Hello world"}
+    {"asctime": "2018-09-05 17:38:38,137", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 25, "message": "division by zero"}
+    {"asctime": "2018-09-05 17:38:38,138", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 33, "message": "Exception has occured", "exc_info": "Traceback (most recent call last):\n  File \"plogger/tests/test_formatter.py\", line 31, in test_exception_with_trace\n    b = 100 / 0\nZeroDivisionError: division by zero"}
+    {"asctime": "2018-09-05 17:38:38,138", "levelname": "INFO", "filename": "test_formatter.py", "lineno": 37, "message": "Hello world", "context check": "check"}
+
+
+Use of the logger object
+------------------------
+
+The logger objects returned by the setup functions are normal python
+:code:`logging.Logger` objects, so all the standard logging functionalities
+should be used. Please refer to the `logging package documentation
+<https://docs.python.org/3/howto/logging.html>`_ for details.
+
+A couple of logging features that should be very commonly used are the
+following. To add additional structured information to a log, the :code:`extra`
+argument should be used. A simple example could be::
+
+    logger.info('Successfully processed document', extra={'uuid': uuid})
+
+When an exception occurs the :code:`exc_info=True` argument should be used, for
+example::
+
+    try:
+        ...
+    except:
+        logger.critical('Failed to run task', exc_info=True)
+
+
+Adding a file handler
+---------------------
+
+In some circumstances it is desired to add to a logger a file handler so that
+the logging messages are also saved to a file. This normally requires at least
+three lines of code, thus to simplify things plogger provides the
+:func:`plogger.add_file_handler` function to do the same with a single line of
+code. The use is quite straightforward as::
+
+    plogger.add_file_handler(logger, '/path/to/log/file.log')
+
+
+Overriding logging configuration
+--------------------------------
+
+An important feature of plogger is that the logging configuration of apps that
+use it can be easily changed via the environment variables given to the logger
+setup functions. Using the same environment variables as the previous examples,
+the following could be done. First set the environment variables with the
+desired logging configuration and logger name:
 
 .. code-block:: bash
 
@@ -98,24 +216,49 @@ Then, in the python code the logger would be used as follows:
 
 .. code-block:: python
 
-    >>> import os
     >>> import plogger
-
-    >>> logging = plogger.load_config('PLOGGER_CFG')
-    >>> logger = logging.getLogger(os.environ['PLOGGER_NAME'])
-
+    >>> logger = plogger.logger_setup('PLOGGER_CFG', 'PLOGGER_NAME')
     >>> logger.error('My error message')
     ERROR 2019-10-18 14:45:22,629 <stdin> 16876 139918773925696 My error message
+
+
+Low level functions
+===================
+
+
+Loading configuration
+---------------------
+
+The :func:`plogger.load_config` function allows loading of a python logging
+configuration. The loading of configuration can be from a file (giving its
+path), from an environment variable (giving the variable name), or loading the
+default configuration that comes with plogger. The loading from file and from
+environment variable expects the format to be yaml or json. See below examples
+of loading for each of the cases:
+
+.. code-block:: python
+
+    import plogger
+
+    ## Load from config file
+    plogger.load_config('/path/to/config.yaml')
+
+    ## Load from environment variable
+    plogger.load_config('PLOGGER_CFG')
+
+    ## Load default config
+    plogger.load_config('plogger_default')
 
 
 Replacing logger handlers
 -------------------------
 
 In some cases it might be needed to replace the handlers of some already
-existing logger. For this plogger provides the :func:`replace_logger_handlers`
-function. To use it, simply provide the logger in which to replace the handlers
-and the logger from where to get the handlers. Using the same environment
-variables as above, the procedure would be as follows:
+existing logger. For this plogger provides the
+:func:`plogger.replace_logger_handlers` function. To use it, simply provide the
+logger in which to replace the handlers and the logger from where to get the
+handlers. Using the same environment variables as above, the procedure would be
+as follows:
 
 .. code-block:: python
 
@@ -123,48 +266,6 @@ variables as above, the procedure would be as follows:
 
     plogger.load_config('PLOGGER_CFG')
     plogger.replace_logger_handlers('some_logger_name', os.environ['PLOGGER_NAME'])
-
-
-Standardizing logging in flask-based microservices
-==================================================
-
-The most important objective of plogger is to allow standardization logging from
-all microservices developed. Thus, the logging from all microservices should be
-configured like explained here. All important sources of logs should be
-reconfigured, so that all logs have a common format and can be properly indexed.
-
-.. code-block:: python
-
-    import plogger
-    from flask import Flask
-
-    ...
-
-    app = Flask(__name__)
-
-    ...
-
-    logger = plogger.flask_app_logger_setup('PLOGGER_CFG', 'PLOGGER_NAME', app)
-
-    ## NOTE: do not change logger beyond this point!
-
-    ...
-
-    ## Use
-    myclass = MyClass(..., logger=logger)
-
-    ...
-
-An important note is that after configuring the logger, the code should not
-modify the logger configuration. For example, do not set the logging level.
-
-In the helm `values.yaml` of the microservice, the default values for the
-envirnoment variables should be set as:
-
-.. code-block:: yaml
-
-    PLOGGER_CFG: plogger_default
-    PLOGGER_NAME: plogger
 
 
 Contributing
@@ -204,17 +305,42 @@ After changing the code, always run unit tests as follows:
 
     ./setup.py test
 
-#### Using bump version
+
+Pull requests
+-------------
+
+- The master branch in bitbucket is blocked for pushing. Thus to contribute it
+  is required to create and push to a new branch and issue a pull request.
+
+- A pull request will only be accepted if:
+
+    - All python files pass pylint checks.
+    - All unit tests run successfully.
+    - New code has docstrings and gets included in the html documentation.
+
+- When developing, after cloning be sure to run the githook-pre-commit to setup
+  the pre-commit hook. This will help you by automatically running pylint before
+  every commit.
+
+
+Using bump version
+------------------
 
 As part of contribution please use bumpversion to bump up the version on master.
 
-```bumpversion major/minor/path plogger/__version__.py```
+.. code-block:: bash
+
+    bumpversion major/minor/path
 
 Push the tags to the repository as well 
 
-```git push; git push --tags```
+.. code-block:: bash
 
-Create the bdist_whl and push to pypi repository using twine
+    git push; git push --tags
 
-```twine upload --repository-url https://pypi.omnius.com --username jenkins --password "" dist/plogger-<version>-py3-none-any.whl ```
+Create the wheel file and push to pypi repository using twine
 
+.. code-block:: bash
+
+    ./setup.py bdist_wheel
+    twine upload --repository-url https://pypi.omnius.com --username jenkins --password "" dist/plogger-<version>-py3-none-any.whl
