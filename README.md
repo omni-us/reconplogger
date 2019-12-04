@@ -297,7 +297,7 @@ The crucial step is installing the requirements which would be done by running:
 
 .. code-block:: bash
 
-    pip3 install --editable .[dev]
+    pip3 install --editable .[dev,test]
 
 After changing the code, always run unit tests as follows:
 
@@ -312,11 +312,17 @@ Pull requests
 - The master branch in bitbucket is blocked for pushing. Thus to contribute it
   is required to create and push to a new branch and issue a pull request.
 
+- On every push to any branch, the jenkins server will build the wheel package
+  and run unit tests. The contributor should check the corresponding status to
+  make sure everything runs successfully. The status of the jenkins jobs can
+  also be seen in the bitbucket repo.
+
 - A pull request will only be accepted if:
 
     - All python files pass pylint checks.
     - All unit tests run successfully.
     - New code has docstrings and gets included in the html documentation.
+    - Jenkins job is successful.
 
 - When developing, after cloning be sure to run the githook-pre-commit to setup
   the pre-commit hook. This will help you by automatically running pylint before
@@ -326,7 +332,10 @@ Pull requests
 Using bump version
 ------------------
 
-As part of contribution please use bumpversion to bump up the version on master.
+Only the maintainer of this repo should bump versions and this should be done only
+on the master branch. To bump the version it is required to use the bumpversion that
+should already be installed if :code:`pip3 install --editable .[dev,test]` was run
+as previously instructed.
 
 .. code-block:: bash
 
@@ -338,9 +347,5 @@ Push the tags to the repository as well
 
     git push; git push --tags
 
-Create the wheel file and push to pypi repository using twine
-
-.. code-block:: bash
-
-    ./setup.py bdist_wheel
-    twine upload --repository-url https://pypi.omnius.com --username jenkins --password "" dist/plogger-<version>-py3-none-any.whl
+When the version tags are pushed, jenkins will automatically build the wheel file,
+test it and if successful, push the package to the pypi server.
