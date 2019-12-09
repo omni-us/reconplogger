@@ -5,7 +5,7 @@ import logging
 import logging.config
 
 
-__version__ = '2.1.1'
+__version__ = '2.2.0'
 
 
 plogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
