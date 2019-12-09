@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; plogger 2.1.1 documentation</title>
+  <title>API Reference &mdash; plogger master/v2.1.1+1commits/2019.12.09 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                2.1.1
+                master/v2.1.1+1commits/2019.12.09
               </div>
             
           
@@ -172,7 +172,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#plogger.load_config" title="plogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
 <td><p>Loads a logging configuration from path or environment variable or dictionary object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#plogger.logger_setup" title="plogger.logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger_setup</span></code></a>([env_cfg, env_name])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#plogger.logger_setup" title="plogger.logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger_setup</span></code></a>([env_cfg, env_name, init_messages])</p></td>
 <td><p>Sets up logging configuration and returns the logger.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#plogger.replace_logger_handlers" title="plogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
@@ -236,7 +236,7 @@
 
 <dl class="function">
 <dt id="plogger.logger_setup">
-<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg=None</em>, <em class="sig-param">env_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.logger_setup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg=None</em>, <em class="sig-param">env_name=None</em>, <em class="sig-param">init_messages=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.logger_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets up logging configuration and returns the logger.</p>
 <p>If env_cfg is unset, the default plogger config is used. If env_name is
 unset, ‘plogger_plain’ logger is used.</p>
@@ -245,6 +245,7 @@ unset, ‘plogger_plain’ logger is used.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>env_cfg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of environment variable containing the logging configuration.</p></li>
 <li><p><strong>env_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of environment variable containing the logger to use.</p></li>
+<li><p><strong>init_messages</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – Whether to log init and test messages.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

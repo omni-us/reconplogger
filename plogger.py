@@ -130,7 +130,7 @@ def test_logger(logger):
     logger.warning('plogger test warning message.')
 
 
-def logger_setup(env_cfg=None, env_name=None):
+def logger_setup(env_cfg=None, env_name=None, init_messages=False):
     """Sets up logging configuration and returns the logger.
 
     If env_cfg is unset, the default plogger config is used. If env_name is
@@ -139,6 +139,7 @@ def logger_setup(env_cfg=None, env_name=None):
     Args:
         env_cfg (str): Name of environment variable containing the logging configuration.
         env_name (str): Name of environment variable containing the logger to use.
+        init_messages (bool): Whether to log init and test messages.
 
     Returns:
         logging.Logger: The logger object.
@@ -151,8 +152,9 @@ def logger_setup(env_cfg=None, env_name=None):
     logger = logging.getLogger(os.getenv(env_name) if env_name in os.environ else 'plogger_plain')
 
     ## Log configured done and test logger ##
-    logger.info('plogger (v'+__version__+') logger configured.')
-    test_logger(logger)
+    if init_messages:
+        logger.info('plogger (v'+__version__+') logger configured.')
+        test_logger(logger)
 
     return logger
 
