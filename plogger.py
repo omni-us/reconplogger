@@ -30,6 +30,9 @@ plogger_default = {
             'class': 'logging.StreamHandler',
             'formatter': 'json',
         },
+        'null': {
+            'class': 'logging.NullHandler',
+        }
     },
     'loggers': {
         'plogger_plain': {
@@ -44,8 +47,15 @@ plogger_default = {
             'level': 'DEBUG',
             'handlers': ['json'],
         },
+        'null': {
+            'handlers': ['null'],
+        },
     },
 }
+
+
+null_logger = logging.Logger('null')
+null_logger.addHandler(logging.NullHandler())
 
 
 def load_config(cfg=None):

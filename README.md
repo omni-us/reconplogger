@@ -45,14 +45,15 @@ logging configuration without having to change code or implement any parsing of
 configuration. However, if a logging configuration is not given externally,
 plogger provide a default configuration.
 
-The default configuration defines two handlers, both of which are stream
-handlers and are set to DEBUG log level. The first handler called `plain` uses a
-simple plain text formatter, and the second handler called `json` as the name
-suggests outputs in json format using the `logmatic
-<https://pypi.org/project/logmatic-python/>`_ JsonFormatter class.
+The default configuration defines three handlers, two of which are stream
+handlers and are set to DEBUG log level. The first handler called :code:`plain` uses a
+simple plain text formatter, and the second handler called :code:`json` as the name
+suggests outputs in json format, using the `logmatic
+<https://pypi.org/project/logmatic-python/>`_ JsonFormatter class. The third
+handler called :code:`null` is a :code:`NullHandler` useful to disable all logging.
 
 For each handler the default configuration defines a corresponding logger:
-:code:`plogger_plain` and :code:`plogger_json`.
+:code:`plogger_plain`, :code:`plogger_json`, and :code:`null`.
 
 
 Standardizing logging in regular python
@@ -80,6 +81,20 @@ logger to use. The following code snippet illustrates the use:
 
 If the environment variables are not set, this function returns the
 :code:`plogger_plain` logger from the default configuration.
+
+For functions or classes that receive logger object as an argument, it might be
+desired to set a default logger so that it can be called without specifying one.
+To have as default a null logger, the plogger module could be used as follows:
+
+.. code-block:: python
+
+    from plogger import null_logger
+
+    ...
+
+    def my_func(arg1, arg2, logger=null_logger):
+
+    ...
 
 
 Standardizing logging in flask-based microservices
