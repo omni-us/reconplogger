@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>plogger - omni:us python logger &mdash; plogger 2.2.0 documentation</title>
+  <title>plogger - omni:us python logger &mdash; plogger 2.3.0 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                2.2.0
+                2.3.0
               </div>
             
           
@@ -188,12 +188,13 @@ See the <cite>setup.cfg</cite> file in the plogger source code for reference.</p
 logging configuration without having to change code or implement any parsing of
 configuration. However, if a logging configuration is not given externally,
 plogger provide a default configuration.</p>
-<p>The default configuration defines two handlers, both of which are stream
-handlers and are set to DEBUG log level. The first handler called <cite>plain</cite> uses a
-simple plain text formatter, and the second handler called <cite>json</cite> as the name
-suggests outputs in json format using the <a class="reference external" href="https://pypi.org/project/logmatic-python/">logmatic</a> JsonFormatter class.</p>
+<p>The default configuration defines three handlers, two of which are stream
+handlers and are set to DEBUG log level. The first handler called <code class="code docutils literal notranslate"><span class="pre">plain</span></code> uses a
+simple plain text formatter, and the second handler called <code class="code docutils literal notranslate"><span class="pre">json</span></code> as the name
+suggests outputs in json format, using the <a class="reference external" href="https://pypi.org/project/logmatic-python/">logmatic</a> JsonFormatter class. The third
+handler called <code class="code docutils literal notranslate"><span class="pre">null</span></code> is a <code class="code docutils literal notranslate"><span class="pre">NullHandler</span></code> useful to disable all logging.</p>
 <p>For each handler the default configuration defines a corresponding logger:
-<code class="code docutils literal notranslate"><span class="pre">plogger_plain</span></code> and <code class="code docutils literal notranslate"><span class="pre">plogger_json</span></code>.</p>
+<code class="code docutils literal notranslate"><span class="pre">plogger_plain</span></code>, <code class="code docutils literal notranslate"><span class="pre">plogger_json</span></code>, and <code class="code docutils literal notranslate"><span class="pre">null</span></code>.</p>
 </div>
 <div class="section" id="standardizing-logging-in-regular-python">
 <h2>Standardizing logging in regular python<a class="headerlink" href="#standardizing-logging-in-regular-python" title="Permalink to this headline">¶</a></h2>
@@ -217,6 +218,18 @@ logger to use. The following code snippet illustrates the use:</p>
 </div>
 <p>If the environment variables are not set, this function returns the
 <code class="code docutils literal notranslate"><span class="pre">plogger_plain</span></code> logger from the default configuration.</p>
+<p>For functions or classes that receive logger object as an argument, it might be
+desired to set a default logger so that it can be called without specifying one.
+To have as default a null logger, the plogger module could be used as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">plogger</span> <span class="kn">import</span> <span class="n">null_logger</span>
+
+<span class="o">...</span>
+
+<span class="k">def</span> <span class="nf">my_func</span><span class="p">(</span><span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">null_logger</span><span class="p">):</span>
+
+<span class="o">...</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="standardizing-logging-in-flask-based-microservices">
 <h2>Standardizing logging in flask-based microservices<a class="headerlink" href="#standardizing-logging-in-flask-based-microservices" title="Permalink to this headline">¶</a></h2>
