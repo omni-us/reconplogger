@@ -84,6 +84,7 @@ def load_config(cfg=None):
             raise ValueError('Received string which is neither a path to an existing file or the name of an set environment variable :: '+str(ex))
 
     logging.config.dictConfig(cfg_dict)
+    logging.root.handlers = [logging.NullHandler()]  # To prevent double logging if root logger is used
 
     return logging
 

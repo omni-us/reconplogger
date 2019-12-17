@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>plogger &mdash; plogger 2.3.0 documentation</title>
+  <title>plogger &mdash; plogger master/v2.3.0+1commits/2019.12.17 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                2.3.0
+                master/v2.3.0+1commits/2019.12.17
               </div>
             
           
@@ -233,6 +233,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Received string which is neither a path to an existing file or the name of an set environment variable :: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span>
 
     <span class="n">logging</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">dictConfig</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">()]</span>  <span class="c1"># To prevent double logging if root logger is used</span>
 
     <span class="k">return</span> <span class="n">logging</span></div>
 
