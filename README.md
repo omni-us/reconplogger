@@ -312,7 +312,7 @@ The crucial step is installing the requirements which would be done by running:
 
 .. code-block:: bash
 
-    pip3 install --editable .[dev,test]
+    pip3 install --editable .[dev,doc,test,all]
 
 After changing the code, always run unit tests as follows:
 
