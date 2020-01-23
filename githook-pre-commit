@@ -41,6 +41,9 @@ while [ "$n" -lt "${#FILES[@]}" ]; do
       echo "${0##*/}: $PYLINT --errors-only ${FILES[$n]}" 1>&2;
       $PYLINT --errors-only "${FILES[$n]}";
       ;;
+    .circleci/config.yml )
+      echo "${0##*/}: circleci config validate -c .circleci/config.yml" 1>&2;
+      circleci config validate -c .circleci/config.yml;
   esac
   [ "$?" != "0" ] && exit 1;
   n=$((n+2));
@@ -50,6 +53,14 @@ done
 ## Run unit tests ##
 ./setup.py test;
 [ "$?" != "0" ] && exit 1;
+
+
+## If bumping version, check wheel ok for pypi ##
+if [ -n ${BUMPVERSION_NEW_VERSION+x} ]; then
+  ./setup.py bdist_wheel;
+  twine check dist/*.whl;
+  [ "$?" != "0" ] && exit 1;
+fi
 
 
 ## Update documentation ##
@@ -64,6 +75,7 @@ if [ $(git rev-parse --abbrev-ref HEAD) = "master" ]; then
   ./setup.py build_sphinx --quiet --builder html --version $VERSION --release $VERSION &&
     rm -fr docs &&
     mv sphinx/_build/html docs &&
+    touch docs/.nojekyll &&
     git add docs;
   [ "$?" != "0" ] && exit 1;
 fi
