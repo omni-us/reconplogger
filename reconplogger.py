@@ -22,33 +22,29 @@ reconplogger_default = {
         },
     },
     'handlers': {
-        'plain': {
+        'plain_handler': {
             'class': 'logging.StreamHandler',
             'formatter': 'plain',
         },
-        'json': {
+        'json_handler': {
             'class': 'logging.StreamHandler',
             'formatter': 'json',
         },
-        'null': {
+        'null_handler': {
             'class': 'logging.NullHandler',
         }
     },
     'loggers': {
-        'reconplogger_plain': {
+        'plain_logger': {
             'level': 'DEBUG',
-            'handlers': ['plain'],
+            'handlers': ['plain_handler'],
         },
-        'reconplogger_json': {
+        'json_logger': {
             'level': 'DEBUG',
-            'handlers': ['json'],
+            'handlers': ['json_handler'],
         },
-        'reconplogger': {
-            'level': 'DEBUG',
-            'handlers': ['json'],
-        },
-        'null': {
-            'handlers': ['null'],
+        'null_logger': {
+            'handlers': ['null_handler'],
         },
     },
 }
