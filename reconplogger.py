@@ -63,7 +63,6 @@ def load_config(cfg=None):
     Returns:
         The logging package object.
     """
-    print("########## {}".format(cfg))
     if cfg is None or cfg == 'reconplogger_default' or (cfg in os.environ and os.environ[cfg] == 'reconplogger_format'):
         cfg_dict = reconplogger_default
     elif isinstance(cfg, dict):
