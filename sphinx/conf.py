@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# plogger documentation build configuration file, created by
+# reconplogger documentation build configuration file, created by
 # sphinx-quickstart on Tue Jul 31 18:01:01 2018.
 #
 # This file is execfile()d with the current directory set to its
