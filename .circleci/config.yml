@@ -23,7 +23,7 @@ jobs:
           command: |
             pip3 install --user $(ls ./dist/*.whl)[all,test]
             mkdir tests_report
-            python3 -m subunit.run plogger_tests | $HOME/.local/bin/subunit2junitxml > tests_report/unittest.xml
+            python3 -m subunit.run reconplogger_tests | $HOME/.local/bin/subunit2junitxml > tests_report/unittest.xml
       - store_test_results:
           path: ./tests_report
   test-py36:

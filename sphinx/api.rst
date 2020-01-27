@@ -1,10 +1,10 @@
 API Reference
 =============
 
-plogger module
+reconplogger module
 --------------
 
-.. automodule:: plogger
+.. automodule:: reconplogger
     :members:
     :undoc-members:
     :show-inheritance:

@@ -8,47 +8,43 @@ import logging.config
 __version__ = '2.3.2'
 
 
-plogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
+reconplogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
 
-plogger_default = {
+reconplogger_default = {
     'version': 1,
     'formatters': {
         'plain': {
-            'format': plogger_format,
+            'format': reconplogger_format,
         },
         'json': {
-            'format': plogger_format,
+            'format': reconplogger_format,
             'class': 'logmatic.jsonlogger.JsonFormatter'
         },
     },
     'handlers': {
-        'plain': {
+        'plain_handler': {
             'class': 'logging.StreamHandler',
             'formatter': 'plain',
         },
-        'json': {
+        'json_handler': {
             'class': 'logging.StreamHandler',
             'formatter': 'json',
         },
-        'null': {
+        'null_handler': {
             'class': 'logging.NullHandler',
         }
     },
     'loggers': {
-        'plogger_plain': {
+        'plain_logger': {
             'level': 'DEBUG',
-            'handlers': ['plain'],
+            'handlers': ['plain_handler'],
         },
-        'plogger_json': {
+        'json_logger': {
             'level': 'DEBUG',
-            'handlers': ['json'],
+            'handlers': ['json_handler'],
         },
-        'plogger': {
-            'level': 'DEBUG',
-            'handlers': ['json'],
-        },
-        'null': {
-            'handlers': ['null'],
+        'null_logger': {
+            'handlers': ['null_handler'],
         },
     },
 }
@@ -63,12 +59,12 @@ def load_config(cfg=None):
 
     Args:
         cfg (str or dict or None): Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None or "plogger_default" to use default configuration.
-    
+
     Returns:
         The logging package object.
     """
-    if cfg is None or cfg == 'plogger_default' or (cfg in os.environ and os.environ[cfg] == 'plogger_default'):
-        cfg_dict = plogger_default
+    if cfg is None or cfg == 'reconplogger_default' or (cfg in os.environ and os.environ[cfg] == 'reconplogger_format'):
+        cfg_dict = reconplogger_default
     elif isinstance(cfg, dict):
         cfg_dict = cfg
     elif isinstance(cfg, str):
@@ -81,15 +77,17 @@ def load_config(cfg=None):
             else:
                 raise ValueError
         except Exception as ex:
-            raise ValueError('Received string which is neither a path to an existing file or the name of an set environment variable :: '+str(ex))
+            raise ValueError(
+                'Received string which is neither a path to an existing file or the name of an set environment variable :: '+str(ex))
 
     logging.config.dictConfig(cfg_dict)
-    logging.root.handlers = [logging.NullHandler()]  # To prevent double logging if root logger is used
+    # To prevent double logging if root logger is used
+    logging.root.handlers = [logging.NullHandler()]
 
     return logging
 
 
-def replace_logger_handlers(logger, handlers='plogger'):
+def replace_logger_handlers(logger, handlers='reconplogger'):
     """Replaces the handlers of a given logger.
 
     Args:
@@ -105,7 +103,8 @@ def replace_logger_handlers(logger, handlers='plogger'):
     ## Resolve handlers ##
     if isinstance(handlers, list):
         if not all(isinstance(x, logging.StreamHandler) for x in handlers):
-            raise ValueError('Expected handlers list to include only StreamHandler objects.')
+            raise ValueError(
+                'Expected handlers list to include only StreamHandler objects.')
     elif isinstance(handlers, str):
         if handlers not in logging.root.manager.loggerDict:
             raise ValueError('Logger "'+handlers+'" not defined.')
@@ -113,13 +112,14 @@ def replace_logger_handlers(logger, handlers='plogger'):
     elif isinstance(logger, logging.Logger):
         handlers = handlers.handlers
     else:
-        raise ValueError('Expected handlers to be list, logger name or Logger object.')
+        raise ValueError(
+            'Expected handlers to be list, logger name or Logger object.')
 
     ## Replace handlers ##
     logger.handlers = list(handlers)
 
 
-def add_file_handler(logger, file_path, format=plogger_format, level=logging.DEBUG):
+def add_file_handler(logger, file_path, format=reconplogger_format, level=logging.DEBUG):
     """Adds a file handler to a given logger.
 
     Args:
@@ -160,11 +160,12 @@ def logger_setup(env_cfg=None, env_name=None, init_messages=False):
     load_config(None if env_cfg is None else os.getenv(env_cfg))
 
     ## Get logger ##
-    logger = logging.getLogger(os.getenv(env_name) if env_name in os.environ else 'plogger_plain')
+    logger = logging.getLogger(
+        os.getenv(env_name) if env_name in os.environ else 'reconplogger_plain')
 
     ## Log configured done and test logger ##
     if init_messages:
-        logger.info('plogger (v'+__version__+') logger configured.')
+        logger.info('reconplogger (v'+__version__+') logger configured.')
         test_logger(logger)
 
     return logger
@@ -182,13 +183,14 @@ def flask_app_logger_setup(env_cfg, env_name, flask_app):
         logging.Logger: The logger object.
     """
 
-    ## Configure logging and get logger ##
+    # Configure logging and get logger ##
     logger = logger_setup(env_cfg, env_name)
 
-    ## Replace flask logger ##
+    # Replace flask logger ##
     flask_app.logger = logger
 
-    ## Replace werkzeug logger handlers ##
-    replace_logger_handlers('werkzeug', os.getenv(env_name, 'plogger_plain'))
+    # Replace werkzeug logger handlers ##
+    replace_logger_handlers('werkzeug', os.getenv(
+        env_name, 'reconplogger_plain'))
 
     return logger

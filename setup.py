@@ -3,7 +3,7 @@
 from setuptools import setup, Command
 import re
 
-VERSION = next(filter(lambda x: x.startswith('__version__ = '), open('plogger.py').readlines())).strip().replace("'","").split()[-1]
+VERSION = next(filter(lambda x: x.startswith('__version__ = '), open('reconplogger.py').readlines())).strip().replace("'","").split()[-1]
 NAME_TESTS = next(filter(lambda x: x.startswith('test_suite = '), open('setup.cfg').readlines())).strip().split()[-1]
 LONG_DESCRIPTION = re.sub(':class:|:func:|:ref:', '', open('README.rst').read())
 CMDCLASS = {}
