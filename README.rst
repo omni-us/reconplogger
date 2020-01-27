@@ -1,3 +1,12 @@
+.. image:: https://circleci.com/gh/omni-us/reconplogger.svg?style=svg
+    :target: https://circleci.com/gh/omni-us/reconplogger
+.. image:: https://codecov.io/gh/omni-us/reconplogger/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/omni-us/reconplogger
+.. image:: https://badge.fury.io/py/reconplogger.svg
+    :target: https://badge.fury.io/py/reconplogger
+.. image:: https://img.shields.io/badge/contributions-welcome-brightgreen.svg
+    :target: https://github.com/omni-us/reconplogger
+
 reconplogger - omni:us python logger
 ====================================
 
