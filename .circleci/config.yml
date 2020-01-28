@@ -39,6 +39,16 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - checkout
+      - run:
+          name: Code coverage
+          command: |
+            pip3 install --user -e .[all,test]
+            python3 -m coverage run -m reconplogger_tests
+            python3 -m coverage report
+            python3 -m coverage html
+            codecov -t $CODECOV_TOKEN_RECONPLOGGER
+      - store_artifacts:
+          path: htmlcov
   publish-pypi:
     docker:
       - image: mauvilsa/docker-twine:1.11.0
