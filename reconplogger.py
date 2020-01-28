@@ -5,7 +5,7 @@ import logging
 import logging.config
 
 
-__version__ = '3.0.0'
+__version__ = '3.1.0'
 
 
 reconplogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
