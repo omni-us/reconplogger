@@ -8,7 +8,7 @@ from testfixtures import LogCapture, compare, Comparison
 from flask import Flask
 
 
-class TestPlogger(unittest.TestCase):
+class TestReconplogger(unittest.TestCase):
     def test_default_logger(self):
         """Test load config with the default config and plain logger."""
         reconplogger.load_config('reconplogger_default')
@@ -59,6 +59,11 @@ class TestPlogger(unittest.TestCase):
                 ('json_logger', 'WARNING', flask_msg),
                 ('werkzeug', 'WARNING', werkzeug_msg),
             )
+
+
+def run_tests():
+    tests = unittest.defaultTestLoader.loadTestsFromTestCase(TestReconplogger)
+    return unittest.TextTestRunner(verbosity=2).run(tests)
 
 
 if __name__ == "__main__":
