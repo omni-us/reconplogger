@@ -337,20 +337,14 @@ After changing the code, always run unit tests as follows:
 Pull requests
 -------------
 
-- The master branch in bitbucket is blocked for pushing. Thus to contribute it
-  is required to create and push to a new branch and issue a pull request.
-
-- On every push to any branch, the jenkins server will build the wheel package
-  and run unit tests. The contributor should check the corresponding status to
-  make sure everything runs successfully. The status of the jenkins jobs can
-  also be seen in the bitbucket repo.
+- To contribute it is required to create and push to a new branch and issue a
+  pull request.
 
 - A pull request will only be accepted if:
 
     - All python files pass pylint checks.
     - All unit tests run successfully.
     - New code has docstrings and gets included in the html documentation.
-    - Jenkins job is successful.
 
 - When developing, after cloning be sure to run the githook-pre-commit to setup
   the pre-commit hook. This will help you by automatically running pylint before
@@ -374,5 +368,5 @@ Push the tags to the repository as well
 
     git push; git push --tags
 
-When the version tags are pushed, jenkins will automatically build the wheel file,
-test it and if successful, push the package to the pypi server.
+When the version tags are pushed, circleci will automatically build the wheel
+file, test it and if successful, push the package to pypi.

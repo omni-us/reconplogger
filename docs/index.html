@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>reconplogger - omni:us python logger &mdash; reconplogger 3.1.0 documentation</title>
+  <title>reconplogger - omni:us python logger &mdash; reconplogger master/v3.1.0+1commits/2020.01.28 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                3.1.0
+                master/v3.1.0+1commits/2020.01.28
               </div>
             
           
@@ -437,19 +437,14 @@ virtualenv -p python3 venv
 <div class="section" id="pull-requests">
 <h2>Pull requests<a class="headerlink" href="#pull-requests" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p>The master branch in bitbucket is blocked for pushing. Thus to contribute it
-is required to create and push to a new branch and issue a pull request.</p></li>
-<li><p>On every push to any branch, the jenkins server will build the wheel package
-and run unit tests. The contributor should check the corresponding status to
-make sure everything runs successfully. The status of the jenkins jobs can
-also be seen in the bitbucket repo.</p></li>
+<li><p>To contribute it is required to create and push to a new branch and issue a
+pull request.</p></li>
 <li><p>A pull request will only be accepted if:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>All python files pass pylint checks.</p></li>
 <li><p>All unit tests run successfully.</p></li>
 <li><p>New code has docstrings and gets included in the html documentation.</p></li>
-<li><p>Jenkins job is successful.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -471,8 +466,8 @@ bumpversion that should already be installed if <code class="code docutils liter
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git push<span class="p">;</span> git push --tags
 </pre></div>
 </div>
-<p>When the version tags are pushed, jenkins will automatically build the wheel file,
-test it and if successful, push the package to the pypi server.</p>
+<p>When the version tags are pushed, circleci will automatically build the wheel
+file, test it and if successful, push the package to pypi.</p>
 </div>
 </div>
 <div class="section" id="documentation-contents">
