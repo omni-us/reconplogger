@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>reconplogger &mdash; reconplogger master/v3.0.0+4commits/2020.01.28 documentation</title>
+  <title>reconplogger &mdash; reconplogger master/v3.0.0+5commits/2020.01.28 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                master/v3.0.0+4commits/2020.01.28
+                master/v3.0.0+5commits/2020.01.28
               </div>
             
           
@@ -207,7 +207,7 @@
     <span class="sd">&quot;&quot;&quot;Loads a logging configuration from path or environment variable or dictionary object.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        cfg (str or dict or None): Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None or &quot;plogger_default&quot; to use default configuration.</span>
+<span class="sd">        cfg (str or dict or None): Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None/&quot;reconplogger_default&quot; to use default configuration.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The logging package object.</span>
@@ -285,16 +285,16 @@
 
 <div class="viewcode-block" id="test_logger"><a class="viewcode-back" href="../api.html#reconplogger.test_logger">[docs]</a><span class="k">def</span> <span class="nf">test_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Logs one message to each debug, info and warning levels intended for testing.&quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;plogger test debug message.&#39;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plogger test info message.&#39;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;plogger test warning message.&#39;</span><span class="p">)</span></div>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;reconplogger test debug message.&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;reconplogger test info message.&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;reconplogger test warning message.&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="logger_setup"><a class="viewcode-back" href="../api.html#reconplogger.logger_setup">[docs]</a><span class="k">def</span> <span class="nf">logger_setup</span><span class="p">(</span><span class="n">env_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init_messages</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Sets up logging configuration and returns the logger.</span>
 
-<span class="sd">    If env_cfg is unset, the default plogger config is used. If env_name is</span>
-<span class="sd">    unset, &#39;plogger_plain&#39; logger is used.</span>
+<span class="sd">    If env_cfg is unset, the default reconplogger config is used. If env_name is</span>
+<span class="sd">    unset, &#39;plain_logger&#39; logger is used.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        env_cfg (str): Name of environment variable containing the logging configuration.</span>
@@ -309,8 +309,12 @@
     <span class="n">load_config</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">env_cfg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">))</span>
 
     <span class="c1">## Get logger ##</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">env_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">else</span> <span class="s1">&#39;reconplogger_plain&#39;</span><span class="p">)</span>
+    <span class="n">logger_name</span> <span class="o">=</span> <span class="s1">&#39;plain_logger&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">env_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="n">logger_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">logger_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">loggerDict</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Logger &quot;&#39;</span><span class="o">+</span><span class="n">logger_name</span><span class="o">+</span><span class="s1">&#39;&quot; not defined.&#39;</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">logger_name</span><span class="p">)</span>
 
     <span class="c1">## Log configured done and test logger ##</span>
     <span class="k">if</span> <span class="n">init_messages</span><span class="p">:</span>
@@ -340,7 +344,7 @@
 
     <span class="c1"># Replace werkzeug logger handlers ##</span>
     <span class="n">replace_logger_handlers</span><span class="p">(</span><span class="s1">&#39;werkzeug&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
-        <span class="n">env_name</span><span class="p">,</span> <span class="s1">&#39;reconplogger_plain&#39;</span><span class="p">))</span>
+        <span class="n">env_name</span><span class="p">,</span> <span class="s1">&#39;plain_logger&#39;</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">logger</span></div>
 </pre></div>

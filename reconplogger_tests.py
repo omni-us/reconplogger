@@ -12,11 +12,11 @@ class TestReconplogger(unittest.TestCase):
     def test_default_logger(self):
         """Test load config with the default config and plain logger."""
         reconplogger.load_config('reconplogger_default')
-        logger = logging.getLogger('reconplogger_plain')
+        logger = logging.getLogger('plain_logger')
         info_msg = 'info message'
         with LogCapture() as log:
             logger.info(info_msg)
-            log.check(('reconplogger_plain', 'INFO', info_msg))
+            log.check(('plain_logger', 'INFO', info_msg))
 
     def test_log_level(self):
         """Test load config with the default config and plain logger changing the log level."""
@@ -44,12 +44,26 @@ class TestReconplogger(unittest.TestCase):
                 compare(Comparison(exception), log.records[-1].exc_info[1])
                 log.check(('json_logger', 'ERROR', error_msg))
 
+    def test_plain_logger_setup(self):
+        """Test logger_setup without specifying environment variable names."""
+        logger = reconplogger.logger_setup()
+        info_msg = 'info message'
+        with LogCapture() as log:
+            logger.info(info_msg)
+            log.check(('plain_logger', 'INFO', info_msg))
+
+    def test_undefined_logger(self):
+        """Test setting up a logger not already defined."""
+        os.environ['LOGGER_NAME'] = 'undefined_logger'
+        self.assertRaises(ValueError, lambda: reconplogger.logger_setup(None, 'LOGGER_NAME'))
+        del os.environ['LOGGER_NAME']
+
     def test_flask_app_logger_setup(self):
         """Test flask app logger setup with json logger."""
-        os.environ['PLOGGER_CFG'] = 'reconplogger_default'
-        os.environ['PLOGGER_NAME'] = 'json_logger'
+        os.environ['LOGGER_CFG'] = 'reconplogger_default'
+        os.environ['LOGGER_NAME'] = 'json_logger'
         app = Flask(__name__)
-        reconplogger.flask_app_logger_setup('PLOGGER_CFG', 'PLOGGER_NAME', app)
+        reconplogger.flask_app_logger_setup('LOGGER_CFG', 'LOGGER_NAME', app)
         flask_msg = 'flask message'
         werkzeug_msg = 'werkzeug message'
         with LogCapture() as log:
@@ -59,6 +73,8 @@ class TestReconplogger(unittest.TestCase):
                 ('json_logger', 'WARNING', flask_msg),
                 ('werkzeug', 'WARNING', werkzeug_msg),
             )
+        del os.environ['LOGGER_CFG']
+        del os.environ['LOGGER_NAME']
 
 
 def run_tests():
