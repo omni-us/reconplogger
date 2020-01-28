@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>plogger - omni:us python logger &mdash; plogger 2.3.2 documentation</title>
+  <title>reconplogger - omni:us python logger &mdash; reconplogger master/v3.0.0+2commits/2020.01.28 documentation</title>
   
 
   
@@ -49,7 +49,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> plogger
+            <a href="#" class="icon icon-home"> reconplogger
           
 
           
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                2.3.2
+                master/v3.0.0+2commits/2020.01.28
               </div>
             
           
@@ -99,7 +99,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">plogger</a>
+          <a href="#">reconplogger</a>
         
       </nav>
 
@@ -130,7 +130,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>plogger - omni:us python logger</li>
+      <li>reconplogger - omni:us python logger</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -149,11 +149,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="plogger-omni-us-python-logger">
-<h1>plogger - omni:us python logger<a class="headerlink" href="#plogger-omni-us-python-logger" title="Permalink to this headline">¶</a></h1>
-<p>This repository contains the code of plogger, a python package to ease the
-standardization of logging within omni:us. The main design decision of plogger
-is to allow total freedom to reconfigure loggers without hard coding anything.</p>
+  <a class="reference external image-reference" href="https://circleci.com/gh/omni-us/reconplogger"><img alt="https://circleci.com/gh/omni-us/reconplogger.svg?style=svg" src="https://circleci.com/gh/omni-us/reconplogger.svg?style=svg" /></a>
+<a class="reference external image-reference" href="https://codecov.io/gh/omni-us/reconplogger"><img alt="https://codecov.io/gh/omni-us/reconplogger/branch/master/graph/badge.svg" src="https://codecov.io/gh/omni-us/reconplogger/branch/master/graph/badge.svg" /></a>
+<a class="reference external image-reference" href="https://badge.fury.io/py/reconplogger"><img alt="https://badge.fury.io/py/reconplogger.svg" src="https://badge.fury.io/py/reconplogger.svg" /></a>
+<a class="reference external image-reference" href="https://github.com/omni-us/reconplogger"><img alt="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" /></a>
+<div class="section" id="reconplogger-omni-us-python-logger">
+<h1>reconplogger - omni:us python logger<a class="headerlink" href="#reconplogger-omni-us-python-logger" title="Permalink to this headline">¶</a></h1>
+<p>This repository contains the code of reconplogger, a python package to ease the
+standardization of logging within omni:us. The main design decision of
+reconplogger is to allow total freedom to reconfigure loggers without hard
+coding anything.</p>
 <p>The package contains essentially three things:</p>
 <ul class="simple">
 <li><p>A default logging configuration.</p></li>
@@ -169,47 +174,50 @@ is to allow total freedom to reconfigure loggers without hard coding anything.</
 </div>
 <div class="section" id="how-to-use">
 <h1>How to use<a class="headerlink" href="#how-to-use" title="Permalink to this headline">¶</a></h1>
-<p>There are two main use cases plogger targets. One is for logging in regular
+<p>There are two main use cases reconplogger targets. One is for logging in regular
 generic python code and the second one is logging in microservices. See the two
 standardizing sections below for a detailed explanation of the two use cases.</p>
 <div class="section" id="add-as-requirement">
 <h2>Add as requirement<a class="headerlink" href="#add-as-requirement" title="Permalink to this headline">¶</a></h2>
-<p>The first step to use plogger is adding it as a requirement in the respective
-package where it will be used. This means adding it in the file <cite>setup.cfg</cite> as
-an item in <cite>install_requires</cite> or in an <cite>extras_require</cite> depending on whether
-plogger is intended to be a core or an optional requirement.</p>
+<p>The first step to use reconplogger is adding it as a requirement in the
+respective package where it will be used. This means adding it in the file
+<cite>setup.cfg</cite> as an item in <code class="code docutils literal notranslate"><span class="pre">install_requires</span></code> or in an
+<code class="code docutils literal notranslate"><span class="pre">extras_require</span></code> depending on whether reconplogger is intended to be a
+core or an optional requirement.</p>
 <p>Note: It is highly discouraged to develop packages in which requirements are
 added directly to <cite>setup.py</cite> or to have an ambiguous <cite>requirements.txt</cite> file.
-See the <cite>setup.cfg</cite> file in the plogger source code for reference.</p>
+See the <cite>setup.cfg</cite> file in the reconplogger source code for reference.</p>
 </div>
 <div class="section" id="default-logging-configuration">
 <h2>Default logging configuration<a class="headerlink" href="#default-logging-configuration" title="Permalink to this headline">¶</a></h2>
-<p>An feature that plogger provides is the possibility of externally setting the
-logging configuration without having to change code or implement any parsing of
-configuration. However, if a logging configuration is not given externally,
-plogger provide a default configuration.</p>
+<p>An feature that reconplogger provides is the possibility of externally setting
+the logging configuration without having to change code or implement any parsing
+of configuration. However, if a logging configuration is not given externally,
+reconplogger provide a default configuration.</p>
 <p>The default configuration defines three handlers, two of which are stream
-handlers and are set to DEBUG log level. The first handler called <code class="code docutils literal notranslate"><span class="pre">plain</span></code> uses a
-simple plain text formatter, and the second handler called <code class="code docutils literal notranslate"><span class="pre">json</span></code> as the name
-suggests outputs in json format, using the <a class="reference external" href="https://pypi.org/project/logmatic-python/">logmatic</a> JsonFormatter class. The third
-handler called <code class="code docutils literal notranslate"><span class="pre">null</span></code> is a <code class="code docutils literal notranslate"><span class="pre">NullHandler</span></code> useful to disable all logging.</p>
+handlers and are set to DEBUG log level. The first handler called
+<code class="code docutils literal notranslate"><span class="pre">plain_handler</span></code> uses a simple plain text formatter, and the second handler
+called <code class="code docutils literal notranslate"><span class="pre">json_handler</span></code> as the name suggests outputs in json format, using
+the <a class="reference external" href="https://pypi.org/project/logmatic-python/">logmatic</a> JsonFormatter class.
+The third handler called <code class="code docutils literal notranslate"><span class="pre">null_handler</span></code> is useful to disable all logging.</p>
 <p>For each handler the default configuration defines a corresponding logger:
-<code class="code docutils literal notranslate"><span class="pre">plogger_plain</span></code>, <code class="code docutils literal notranslate"><span class="pre">plogger_json</span></code>, and <code class="code docutils literal notranslate"><span class="pre">null</span></code>.</p>
+<code class="code docutils literal notranslate"><span class="pre">plain_logger</span></code>, <code class="code docutils literal notranslate"><span class="pre">json_logger</span></code> and <code class="code docutils literal notranslate"><span class="pre">null_logger</span></code>.</p>
 </div>
 <div class="section" id="standardizing-logging-in-regular-python">
 <h2>Standardizing logging in regular python<a class="headerlink" href="#standardizing-logging-in-regular-python" title="Permalink to this headline">¶</a></h2>
-<p>One objective of plogger is to ease the use of logging and standardize the way
-it is done across all omni:us python code. The use of plogger comes down to
-calling one function to get the logger object. For regular python code (i.e. not
-a microservice) the function to use is <a class="reference internal" href="api.html#plogger.logger_setup" title="plogger.logger_setup"><code class="xref py py-func docutils literal notranslate"><span class="pre">plogger.logger_setup()</span></code></a>. To this
-function you give as argument two strings, which are names of environment
-variables, one for the logging configuration and the other for the name of the
-logger to use. The following code snippet illustrates the use:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">plogger</span>
+<p>One objective of reconplogger is to ease the use of logging and standardize the
+way it is done across all omni:us python code. The use of reconplogger comes
+down to calling one function to get the logger object. For regular python code
+(i.e. not a microservice) the function to use is
+<a class="reference internal" href="api.html#reconplogger.logger_setup" title="reconplogger.logger_setup"><code class="xref py py-func docutils literal notranslate"><span class="pre">reconplogger.logger_setup()</span></code></a>. To this function you give as argument two
+strings, which are names of environment variables, one for the logging
+configuration and the other for the name of the logger to use. The following
+code snippet illustrates the use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">reconplogger</span>
 
 <span class="o">...</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">plogger</span><span class="o">.</span><span class="n">logger_setup</span><span class="p">(</span><span class="s1">&#39;PLOGGER_CFG&#39;</span><span class="p">,</span> <span class="s1">&#39;PLOGGER_NAME&#39;</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">reconplogger</span><span class="o">.</span><span class="n">logger_setup</span><span class="p">(</span><span class="s1">&#39;LOGGER_CFG&#39;</span><span class="p">,</span> <span class="s1">&#39;LOGGER_NAME&#39;</span><span class="p">)</span>
 
 <span class="o">...</span>
 
@@ -217,11 +225,13 @@ logger to use. The following code snippet illustrates the use:</p>
 </pre></div>
 </div>
 <p>If the environment variables are not set, this function returns the
-<code class="code docutils literal notranslate"><span class="pre">plogger_plain</span></code> logger from the default configuration.</p>
+<code class="code docutils literal notranslate"><span class="pre">plain_logger</span></code> logger from the default configuration. Note that the
+environment variable names are not required to be <code class="code docutils literal notranslate"><span class="pre">LOGGER_CFG,</span>
+<span class="pre">LOGGER_NAME</span></code>. These can be chosen by the user for each particular application.</p>
 <p>For functions or classes that receive logger object as an argument, it might be
 desired to set a default logger so that it can be called without specifying one.
-To have as default a null logger, the plogger module could be used as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">plogger</span> <span class="kn">import</span> <span class="n">null_logger</span>
+To have as default a null logger, the reconplogger module could be used as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">reconplogger</span> <span class="kn">import</span> <span class="n">null_logger</span>
 
 <span class="o">...</span>
 
@@ -233,15 +243,15 @@ To have as default a null logger, the plogger module could be used as follows:</
 </div>
 <div class="section" id="standardizing-logging-in-flask-based-microservices">
 <h2>Standardizing logging in flask-based microservices<a class="headerlink" href="#standardizing-logging-in-flask-based-microservices" title="Permalink to this headline">¶</a></h2>
-<p>The most important objective of plogger is to allow standardization of a
+<p>The most important objective of reconplogger is to allow standardization of a
 structured logging format for all microservices developed. Thus, the logging
 from all microservices should be configured like explained here. The use is
-analogous to the previous case, but using the
-<a class="reference internal" href="api.html#plogger.flask_app_logger_setup" title="plogger.flask_app_logger_setup"><code class="xref py py-func docutils literal notranslate"><span class="pre">plogger.flask_app_logger_setup()</span></code></a> instead, and giving as a third argument
+analogous to the previous case, but using the function
+<a class="reference internal" href="api.html#reconplogger.flask_app_logger_setup" title="reconplogger.flask_app_logger_setup"><code class="xref py py-func docutils literal notranslate"><span class="pre">reconplogger.flask_app_logger_setup()</span></code></a> instead, and giving as a third argument
 the flask app object. Additional to the previous case, this function replaces
-the flask app and werkzeug loggers to use a plogger configured one. The usage
+the flask app and werkzeug loggers to use a reconplogger configured one. The usage
 would be as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">plogger</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">reconplogger</span>
 <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
 
 <span class="o">...</span>
@@ -250,7 +260,7 @@ would be as follows:</p>
 
 <span class="o">...</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">plogger</span><span class="o">.</span><span class="n">flask_app_logger_setup</span><span class="p">(</span><span class="s1">&#39;PLOGGER_CFG&#39;</span><span class="p">,</span> <span class="s1">&#39;PLOGGER_NAME&#39;</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">reconplogger</span><span class="o">.</span><span class="n">flask_app_logger_setup</span><span class="p">(</span><span class="s1">&#39;LOGGER_CFG&#39;</span><span class="p">,</span> <span class="s1">&#39;LOGGER_NAME&#39;</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
 
 <span class="c1">## NOTE: do not change logger beyond this point!</span>
 
@@ -269,18 +279,18 @@ additional handler to the logger is not a problem. This could be desired for
 example to also log to a file.</p>
 <p>In the helm <cite>values.yaml</cite> file of the microservice, the default values for the
 environment variables should be set as:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">PLOGGER_CFG</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">plogger_default</span>
-<span class="nt">PLOGGER_NAME</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">plogger_json</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">LOGGER_CFG</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">reconplogger_default</span>
+<span class="nt">LOGGER_NAME</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">json_logger</span>
 </pre></div>
 </div>
-<p>With the <code class="code docutils literal notranslate"><span class="pre">plogger_json</span></code> logger, the format of the logs should look
+<p>With the <code class="code docutils literal notranslate"><span class="pre">json_logger</span></code> logger, the format of the logs should look
 something like the following:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,137&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello world&quot;</span><span class="p">}</span>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,137&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello world&quot;</span><span class="p">}</span>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,137&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello world&quot;</span><span class="p">}</span>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,137&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">17</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello world&quot;</span><span class="p">}</span>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,137&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;division by zero&quot;</span><span class="p">}</span>
-<span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,138&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Exception has occured&quot;</span><span class="p">,</span> <span class="s2">&quot;exc_info&quot;</span><span class="p">:</span> <span class="s2">&quot;Traceback (most recent call last):</span><span class="se">\n</span><span class="s2">  File </span><span class="se">\&quot;</span><span class="s2">plogger/tests/test_formatter.py</span><span class="se">\&quot;</span><span class="s2">, line 31, in test_exception_with_trace</span><span class="se">\n</span><span class="s2">    b = 100 / 0</span><span class="se">\n</span><span class="s2">ZeroDivisionError: division by zero&quot;</span><span class="p">}</span>
+<span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,138&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Exception has occured&quot;</span><span class="p">,</span> <span class="s2">&quot;exc_info&quot;</span><span class="p">:</span> <span class="s2">&quot;Traceback (most recent call last):</span><span class="se">\n</span><span class="s2">  File </span><span class="se">\&quot;</span><span class="s2">reconplogger/tests/test_formatter.py</span><span class="se">\&quot;</span><span class="s2">, line 31, in test_exception_with_trace</span><span class="se">\n</span><span class="s2">    b = 100 / 0</span><span class="se">\n</span><span class="s2">ZeroDivisionError: division by zero&quot;</span><span class="p">}</span>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,138&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">37</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello world&quot;</span><span class="p">,</span> <span class="s2">&quot;context check&quot;</span><span class="p">:</span> <span class="s2">&quot;check&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
@@ -309,23 +319,23 @@ example:</p>
 <h2>Adding a file handler<a class="headerlink" href="#adding-a-file-handler" title="Permalink to this headline">¶</a></h2>
 <p>In some circumstances it is desired to add to a logger a file handler so that
 the logging messages are also saved to a file. This normally requires at least
-three lines of code, thus to simplify things plogger provides the
-<a class="reference internal" href="api.html#plogger.add_file_handler" title="plogger.add_file_handler"><code class="xref py py-func docutils literal notranslate"><span class="pre">plogger.add_file_handler()</span></code></a> function to do the same with a single line of
-code. The use is quite straightforward as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">plogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="s1">&#39;/path/to/log/file.log&#39;</span><span class="p">)</span>
+three lines of code, thus to simplify things reconplogger provides the
+<a class="reference internal" href="api.html#reconplogger.add_file_handler" title="reconplogger.add_file_handler"><code class="xref py py-func docutils literal notranslate"><span class="pre">reconplogger.add_file_handler()</span></code></a> function to do the same with a single line
+of code. The use is quite straightforward as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reconplogger</span><span class="o">.</span><span class="n">add_file_handler</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="s1">&#39;/path/to/log/file.log&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="overriding-logging-configuration">
 <h2>Overriding logging configuration<a class="headerlink" href="#overriding-logging-configuration" title="Permalink to this headline">¶</a></h2>
-<p>An important feature of plogger is that the logging configuration of apps that
-use it can be easily changed via the environment variables given to the logger
-setup functions. Using the same environment variables as the previous examples,
-the following could be done. First set the environment variables with the
-desired logging configuration and logger name:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">PLOGGER_NAME</span><span class="o">=</span><span class="s2">&quot;example_logger&quot;</span>
+<p>An important feature of reconplogger is that the logging configuration of apps
+that use it can be easily changed via the environment variables given to the
+logger setup functions. Using the same environment variables as the previous
+examples, the following could be done. First set the environment variables with
+the desired logging configuration and logger name:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">LOGGER_NAME</span><span class="o">=</span><span class="s2">&quot;example_logger&quot;</span>
 
-<span class="nb">export</span> <span class="nv">PLOGGER_CFG</span><span class="o">=</span><span class="s2">&quot;{</span>
+<span class="nb">export</span> <span class="nv">LOGGER_CFG</span><span class="o">=</span><span class="s2">&quot;{</span>
 <span class="s2">    &#39;version&#39;: 1,</span>
 <span class="s2">    &#39;formatters&#39;: {</span>
 <span class="s2">        &#39;verbose&#39;: {</span>
@@ -349,8 +359,8 @@ desired logging configuration and logger name:</p>
 </pre></div>
 </div>
 <p>Then, in the python code the logger would be used as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">plogger</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">logger</span> <span class="o">=</span> <span class="n">plogger</span><span class="o">.</span><span class="n">logger_setup</span><span class="p">(</span><span class="s1">&#39;PLOGGER_CFG&#39;</span><span class="p">,</span> <span class="s1">&#39;PLOGGER_NAME&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">reconplogger</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logger</span> <span class="o">=</span> <span class="n">reconplogger</span><span class="o">.</span><span class="n">logger_setup</span><span class="p">(</span><span class="s1">&#39;LOGGER_CFG&#39;</span><span class="p">,</span> <span class="s1">&#39;LOGGER_NAME&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;My error message&#39;</span><span class="p">)</span>
 <span class="go">ERROR 2019-10-18 14:45:22,629 &lt;stdin&gt; 16876 139918773925696 My error message</span>
 </pre></div>
@@ -361,37 +371,37 @@ desired logging configuration and logger name:</p>
 <h1>Low level functions<a class="headerlink" href="#low-level-functions" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="loading-configuration">
 <h2>Loading configuration<a class="headerlink" href="#loading-configuration" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="api.html#plogger.load_config" title="plogger.load_config"><code class="xref py py-func docutils literal notranslate"><span class="pre">plogger.load_config()</span></code></a> function allows loading of a python logging
+<p>The <a class="reference internal" href="api.html#reconplogger.load_config" title="reconplogger.load_config"><code class="xref py py-func docutils literal notranslate"><span class="pre">reconplogger.load_config()</span></code></a> function allows loading of a python logging
 configuration. The loading of configuration can be from a file (giving its
 path), from an environment variable (giving the variable name), or loading the
-default configuration that comes with plogger. The loading from file and from
+default configuration that comes with reconplogger. The loading from file and from
 environment variable expects the format to be yaml or json. See below examples
 of loading for each of the cases:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">plogger</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">reconplogger</span>
 
 <span class="c1">## Load from config file</span>
-<span class="n">plogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;/path/to/config.yaml&#39;</span><span class="p">)</span>
+<span class="n">reconplogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;/path/to/config.yaml&#39;</span><span class="p">)</span>
 
 <span class="c1">## Load from environment variable</span>
-<span class="n">plogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;PLOGGER_CFG&#39;</span><span class="p">)</span>
+<span class="n">reconplogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;LOGGER_CFG&#39;</span><span class="p">)</span>
 
 <span class="c1">## Load default config</span>
-<span class="n">plogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;plogger_default&#39;</span><span class="p">)</span>
+<span class="n">reconplogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;reconplogger_default&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="replacing-logger-handlers">
 <h2>Replacing logger handlers<a class="headerlink" href="#replacing-logger-handlers" title="Permalink to this headline">¶</a></h2>
 <p>In some cases it might be needed to replace the handlers of some already
-existing logger. For this plogger provides the
-<a class="reference internal" href="api.html#plogger.replace_logger_handlers" title="plogger.replace_logger_handlers"><code class="xref py py-func docutils literal notranslate"><span class="pre">plogger.replace_logger_handlers()</span></code></a> function. To use it, simply provide the
-logger in which to replace the handlers and the logger from where to get the
+existing logger. For this reconplogger provides the
+<a class="reference internal" href="api.html#reconplogger.replace_logger_handlers" title="reconplogger.replace_logger_handlers"><code class="xref py py-func docutils literal notranslate"><span class="pre">reconplogger.replace_logger_handlers()</span></code></a> function. To use it, simply provide
+the logger in which to replace the handlers and the logger from where to get the
 handlers. Using the same environment variables as above, the procedure would be
 as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">plogger</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">reconplogger</span>
 
-<span class="n">plogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;PLOGGER_CFG&#39;</span><span class="p">)</span>
-<span class="n">plogger</span><span class="o">.</span><span class="n">replace_logger_handlers</span><span class="p">(</span><span class="s1">&#39;some_logger_name&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PLOGGER_NAME&#39;</span><span class="p">])</span>
+<span class="n">reconplogger</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;LOGGER_CFG&#39;</span><span class="p">)</span>
+<span class="n">reconplogger</span><span class="o">.</span><span class="n">replace_logger_handlers</span><span class="p">(</span><span class="s1">&#39;some_logger_name&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;LOGGER_NAME&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -399,20 +409,19 @@ as follows:</p>
 <div class="section" id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
 <p>Contributions to this package are very welcome. When you intend to work with the
-source code, note that this project does not include a <code class="code docutils literal notranslate"><span class="pre">requirements.txt</span></code>
-file. This is by intention. To make it very clear what are the requirements for
+source code, note that this project does not include a <cite>requirements.txt</cite> file.
+This is by intention. To make it very clear what are the requirements for
 different use cases, all the requirements of the project are stored in the file
-<code class="code docutils literal notranslate"><span class="pre">setup.cfg</span></code>. The basic runtime requirements are defined in section
+<cite>setup.cfg</cite>. The basic runtime requirements are defined in section
 <code class="code docutils literal notranslate"><span class="pre">[options]</span></code> in the <code class="code docutils literal notranslate"><span class="pre">install_requires</span></code> entry. All optional
 requirements are stored in section <code class="code docutils literal notranslate"><span class="pre">[options.extras_require]</span></code>. There is a
-<code class="code docutils literal notranslate"><span class="pre">dev</span></code> extras require to be used by developers (e.g. requirements to run
-the unit tests) and a <code class="code docutils literal notranslate"><span class="pre">bump</span></code> extras require for the maintainer of the
-package.</p>
+<cite>dev</cite> extras require to be used by developers (e.g. requirements to run the unit
+tests) and a <code class="code docutils literal notranslate"><span class="pre">bump</span></code> extras require for the maintainer of the package.</p>
 <p>The recommended way to work with the source code is the following. First clone
 the repository, then create a virtual environment, activate it and finally
 install the development requirements. More precisely the steps would be:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone ssh://git@code.omnius.corp:7999/bkd/plogger.git
-<span class="nb">cd</span> plogger
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/omni-us/reconplogger.git
+<span class="nb">cd</span> reconplogger
 virtualenv -p python3 venv
 . venv/bin/activate
 </pre></div>
@@ -451,10 +460,10 @@ every commit.</p></li>
 </div>
 <div class="section" id="using-bump-version">
 <h2>Using bump version<a class="headerlink" href="#using-bump-version" title="Permalink to this headline">¶</a></h2>
-<p>Only the maintainer of this repo should bump versions and this should be done only
-on the master branch. To bump the version it is required to use the bumpversion that
-should already be installed if <code class="code docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--editable</span> <span class="pre">.[dev,test]</span></code> was run
-as previously instructed.</p>
+<p>Only the maintainer of this repo should bump versions and this should be done
+only on the master branch. To bump the version it is required to use the
+bumpversion that should already be installed if <code class="code docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--editable</span>
+<span class="pre">.[dev,doc,test,all]</span></code> was run as previously instructed.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bumpversion major/minor/path
 </pre></div>
 </div>
@@ -471,7 +480,7 @@ test it and if successful, push the package to the pypi server.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-plogger">plogger module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#reconplogger-module">reconplogger module</a></li>
 </ul>
 </li>
 </ul>

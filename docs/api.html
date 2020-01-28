@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; plogger 2.3.2 documentation</title>
+  <title>API Reference &mdash; reconplogger master/v3.0.0+2commits/2020.01.28 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="plogger - omni:us python logger" href="index.html" /> 
+    <link rel="prev" title="reconplogger - omni:us python logger" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -49,7 +49,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> plogger
+            <a href="index.html" class="icon icon-home"> reconplogger
           
 
           
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                2.3.2
+                master/v3.0.0+2commits/2020.01.28
               </div>
             
           
@@ -85,7 +85,7 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-plogger">plogger module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reconplogger-module">reconplogger module</a></li>
 </ul>
 </li>
 </ul>
@@ -102,7 +102,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">plogger</a>
+          <a href="index.html">reconplogger</a>
         
       </nav>
 
@@ -154,38 +154,38 @@
             
   <div class="section" id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-plogger">
-<span id="plogger-module"></span><h2>plogger module<a class="headerlink" href="#module-plogger" title="Permalink to this headline">¶</a></h2>
-<p><strong>Functions</strong></p>
+<div class="section" id="reconplogger-module">
+<h2>reconplogger module<a class="headerlink" href="#reconplogger-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-reconplogger"></span><p><strong>Functions</strong></p>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.add_file_handler" title="plogger.add_file_handler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_file_handler</span></code></a>(logger, file_path[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.add_file_handler" title="reconplogger.add_file_handler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_file_handler</span></code></a>(logger, file_path[, …])</p></td>
 <td><p>Adds a file handler to a given logger.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#plogger.flask_app_logger_setup" title="plogger.flask_app_logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flask_app_logger_setup</span></code></a>(env_cfg, env_name, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.flask_app_logger_setup" title="reconplogger.flask_app_logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flask_app_logger_setup</span></code></a>(env_cfg, env_name, …)</p></td>
 <td><p>Sets up logging configuration, configures flask to use it, and returns the logger.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.load_config" title="plogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.load_config" title="reconplogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
 <td><p>Loads a logging configuration from path or environment variable or dictionary object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#plogger.logger_setup" title="plogger.logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger_setup</span></code></a>([env_cfg, env_name, init_messages])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.logger_setup" title="reconplogger.logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger_setup</span></code></a>([env_cfg, env_name, init_messages])</p></td>
 <td><p>Sets up logging configuration and returns the logger.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#plogger.replace_logger_handlers" title="plogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.replace_logger_handlers" title="reconplogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
 <td><p>Replaces the handlers of a given logger.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#plogger.test_logger" title="plogger.test_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_logger</span></code></a>(logger)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.test_logger" title="reconplogger.test_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_logger</span></code></a>(logger)</p></td>
 <td><p>Logs one message to each debug, info and warning levels intended for testing.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="function">
-<dt id="plogger.add_file_handler">
-<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">add_file_handler</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">file_path</em>, <em class="sig-param">format='%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'</em>, <em class="sig-param">level=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#add_file_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
+<dt id="reconplogger.add_file_handler">
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">add_file_handler</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">file_path</em>, <em class="sig-param">format='%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'</em>, <em class="sig-param">level=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#add_file_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a file handler to a given logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -200,8 +200,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.flask_app_logger_setup">
-<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">flask_app_logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg</em>, <em class="sig-param">env_name</em>, <em class="sig-param">flask_app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#flask_app_logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.flask_app_logger_setup" title="Permalink to this definition">¶</a></dt>
+<dt id="reconplogger.flask_app_logger_setup">
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">flask_app_logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg</em>, <em class="sig-param">env_name</em>, <em class="sig-param">flask_app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#flask_app_logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.flask_app_logger_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets up logging configuration, configures flask to use it, and returns the logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -221,8 +221,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.load_config">
-<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param">cfg=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.load_config" title="Permalink to this definition">¶</a></dt>
+<dt id="reconplogger.load_config">
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param">cfg=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.load_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a logging configuration from path or environment variable or dictionary object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -235,8 +235,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.logger_setup">
-<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg=None</em>, <em class="sig-param">env_name=None</em>, <em class="sig-param">init_messages=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.logger_setup" title="Permalink to this definition">¶</a></dt>
+<dt id="reconplogger.logger_setup">
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">logger_setup</code><span class="sig-paren">(</span><em class="sig-param">env_cfg=None</em>, <em class="sig-param">env_name=None</em>, <em class="sig-param">init_messages=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.logger_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets up logging configuration and returns the logger.</p>
 <p>If env_cfg is unset, the default plogger config is used. If env_name is
 unset, ‘plogger_plain’ logger is used.</p>
@@ -258,8 +258,8 @@ unset, ‘plogger_plain’ logger is used.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.replace_logger_handlers">
-<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">replace_logger_handlers</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">handlers='plogger'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#replace_logger_handlers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.replace_logger_handlers" title="Permalink to this definition">¶</a></dt>
+<dt id="reconplogger.replace_logger_handlers">
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">replace_logger_handlers</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">handlers='reconplogger'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#replace_logger_handlers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.replace_logger_handlers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replaces the handlers of a given logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -272,8 +272,8 @@ unset, ‘plogger_plain’ logger is used.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="plogger.test_logger">
-<code class="sig-prename descclassname">plogger.</code><code class="sig-name descname">test_logger</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plogger.html#test_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plogger.test_logger" title="Permalink to this definition">¶</a></dt>
+<dt id="reconplogger.test_logger">
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">test_logger</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#test_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.test_logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logs one message to each debug, info and warning levels intended for testing.</p>
 </dd></dl>
 
@@ -289,7 +289,7 @@ unset, ‘plogger_plain’ logger is used.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="plogger - omni:us python logger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="reconplogger - omni:us python logger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
