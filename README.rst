@@ -126,6 +126,7 @@ would be as follows:
 .. code-block:: python
 
     import reconplogger
+    import os
     from flask import Flask
 
     ...
@@ -134,7 +135,7 @@ would be as follows:
 
     ...
 
-    logger = reconplogger.flask_app_logger_setup('LOGGER_CFG', 'LOGGER_NAME', app)
+    logger = reconplogger.flask_app_logger_setup('LOGGER_CFG', os.getenv('LOGGER_NAME'), app)
 
     ## NOTE: do not change logger beyond this point!
 

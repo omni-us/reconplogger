@@ -94,13 +94,13 @@ def replace_logger_handlers(logger, handlers='reconplogger'):
         logger (logging.Logger or str): Object or name of logger to replace handlers.
         handlers (list[logging.StreamHandler] or logging.Logger or str): List of handlers or object or name of logger from which to get handlers.
     """
-    ## Resolve logger ##
+    # Resolve logger
     if isinstance(logger, str):
         logger = logging.getLogger(logger)
     if not isinstance(logger, logging.Logger):
         raise ValueError('Expected logger to be logger name or Logger object.')
 
-    ## Resolve handlers ##
+    # Resolve handlers
     if isinstance(handlers, list):
         if not all(isinstance(x, logging.StreamHandler) for x in handlers):
             raise ValueError(
@@ -141,33 +141,29 @@ def test_logger(logger):
     logger.warning('reconplogger test warning message.')
 
 
-def logger_setup(env_cfg=None, env_name=None, init_messages=False):
+def logger_setup(logger_name='plain_logger', env_cfg=None, init_messages=False):
     """Sets up logging configuration and returns the logger.
 
-    If env_cfg is unset, the default reconplogger config is used. If env_name is
-    unset, 'plain_logger' logger is used.
-
+    If env_prefix is unset, the default plain logger is used
     Args:
-        env_cfg (str): Name of environment variable containing the logging configuration.
-        env_name (str): Name of environment variable containing the logger to use.
+        logger_name (str):  Name of the logger that needs to be used. By default plain logger is used. Current setup also supports json logger
+        env_prefix (str): Name of environment variable containing the name of the app to be used
         init_messages (bool): Whether to log init and test messages.
 
     Returns:
         logging.Logger: The logger object.
     """
 
-    ## Configure logging ##
+    # Configure logging
     load_config(None if env_cfg is None else os.getenv(env_cfg))
 
-    ## Get logger ##
-    logger_name = 'plain_logger'
-    if isinstance(env_name, str) and env_name in os.environ:
-        logger_name = os.getenv(env_name)
+    # Get logger
+    logger_name = logger_name
     if logger_name not in logging.Logger.manager.loggerDict:
         raise ValueError('Logger "'+logger_name+'" not defined.')
     logger = logging.getLogger(logger_name)
 
-    ## Log configured done and test logger ##
+    # Log configured done and test logger
     if init_messages:
         logger.info('reconplogger (v'+__version__+') logger configured.')
         test_logger(logger)
@@ -187,13 +183,15 @@ def flask_app_logger_setup(env_cfg, env_name, flask_app):
         logging.Logger: The logger object.
     """
 
-    # Configure logging and get logger ##
-    logger = logger_setup(env_cfg, env_name)
+    # Configure logging and get logger
+    print("########")
+    print(env_name, env_cfg)
+    logger = logger_setup(logger_name=env_name, env_cfg=env_cfg)
 
-    # Replace flask logger ##
+    # Replace flask logger 
     flask_app.logger = logger
 
-    # Replace werkzeug logger handlers ##
+    # Replace werkzeug logger handlers 
     replace_logger_handlers('werkzeug', os.getenv(
         env_name, 'plain_logger'))
 

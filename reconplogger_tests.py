@@ -52,10 +52,19 @@ class TestReconplogger(unittest.TestCase):
             logger.info(info_msg)
             log.check(('plain_logger', 'INFO', info_msg))
 
+    def test_json_logger_setup(self):
+        """Test logger_setup without specifying environment variable names but changing logger name."""
+        logger = reconplogger.logger_setup(logger_name='json_logger')
+        info_msg = 'info message'
+        with LogCapture() as log:
+            logger.info(info_msg)
+            log.check(('json_logger', 'INFO', info_msg))
+
     def test_undefined_logger(self):
         """Test setting up a logger not already defined."""
         os.environ['LOGGER_NAME'] = 'undefined_logger'
-        self.assertRaises(ValueError, lambda: reconplogger.logger_setup(None, 'LOGGER_NAME'))
+        self.assertRaises(
+            ValueError, lambda: reconplogger.logger_setup(None, 'LOGGER_NAME'))
         del os.environ['LOGGER_NAME']
 
     def test_flask_app_logger_setup(self):
@@ -63,7 +72,7 @@ class TestReconplogger(unittest.TestCase):
         os.environ['LOGGER_CFG'] = 'reconplogger_default'
         os.environ['LOGGER_NAME'] = 'json_logger'
         app = Flask(__name__)
-        reconplogger.flask_app_logger_setup('LOGGER_CFG', 'LOGGER_NAME', app)
+        reconplogger.flask_app_logger_setup('LOGGER_CFG', os.getenv('LOGGER_NAME'), app)
         flask_msg = 'flask message'
         werkzeug_msg = 'werkzeug message'
         with LogCapture() as log:
