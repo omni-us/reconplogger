@@ -3,7 +3,6 @@ import os
 import yaml
 import logging
 import logging.config
-import ast
 
 
 __version__ = '3.1.0'
@@ -11,7 +10,7 @@ __version__ = '3.1.0'
 
 reconplogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
 
-reconplogger_default = {
+reconplogger_default_cfg = {
     'version': 1,
     'formatters': {
         'plain': {
@@ -59,13 +58,13 @@ def load_config(cfg=None):
     """Loads a logging configuration from path or environment variable or dictionary object.
 
     Args:
-        cfg (str or dict or None): Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None/"reconplogger_default" to use default configuration.
+        cfg (str or dict or None): Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None/"reconplogger_default_cfg" to use default configuration.
 
     Returns:
         The logging package object.
     """
-    if cfg is None or cfg == 'reconplogger_default' or (cfg in os.environ and os.environ[cfg] == 'reconplogger_format'):
-        cfg_dict = reconplogger_default
+    if cfg is None or cfg == 'reconplogger_default_cfg' or (cfg in os.environ and os.environ[cfg] == 'reconplogger_default_cfg'):
+        cfg_dict = reconplogger_default_cfg
     elif isinstance(cfg, dict):
         cfg_dict = cfg
     elif isinstance(cfg, str):
@@ -77,15 +76,16 @@ def load_config(cfg=None):
                 cfg_dict = yaml.safe_load(os.environ[cfg])
             else:
                 try:
-                    cfg_dict = ast.literal_eval(cfg)
+                    cfg_dict = yaml.safe_load(cfg)
                     if not isinstance(cfg_dict, dict):
                         raise ValueError
-                except Exception as e:
+                except Exception:
                     raise ValueError
-        except Exception as ex:
+        except Exception:
             raise ValueError(
-                'Received string which is neither a path to an existing file nor the name of an set environment variable nor a python dictionary string that can be consumed by logging.config.dictConfigb:: '+str(ex))
+                'Received string which is neither a path to an existing file nor the name of an set environment variable nor a python dictionary string that can be consumed by logging.config.dictConfig.')
 
+    cfg_dict['disable_existing_loggers'] = False
     logging.config.dictConfig(cfg_dict)
     # To prevent double logging if root logger is used
     logging.root.handlers = [logging.NullHandler()]
@@ -93,7 +93,7 @@ def load_config(cfg=None):
     return logging
 
 
-def replace_logger_handlers(logger, handlers='reconplogger'):
+def replace_logger_handlers(logger, handlers='plain_logger'):
     """Replaces the handlers of a given logger.
 
     Args:
@@ -102,7 +102,7 @@ def replace_logger_handlers(logger, handlers='reconplogger'):
     """
     # Resolve logger
     if isinstance(logger, str):
-        logger = logging.getLogger(logger)
+        logger = get_logger(logger)
     if not isinstance(logger, logging.Logger):
         raise ValueError('Expected logger to be logger name or Logger object.')
 
@@ -112,9 +112,7 @@ def replace_logger_handlers(logger, handlers='reconplogger'):
             raise ValueError(
                 'Expected handlers list to include only StreamHandler objects.')
     elif isinstance(handlers, str):
-        if handlers not in logging.root.manager.loggerDict:
-            raise ValueError('Logger "'+handlers+'" not defined.')
-        handlers = logging.getLogger(handlers).handlers
+        handlers = get_logger(handlers).handlers
     elif isinstance(logger, logging.Logger):
         handlers = handlers.handlers
     else:
@@ -147,38 +145,45 @@ def test_logger(logger):
     logger.warning('reconplogger test warning message.')
 
 
-def logger_setup(logger_name='plain_logger', config=None, env_prefix=None, init_messages=False):
+def get_logger(logger_name):
+    """Returns an already existing logger.
+
+    Args:
+        logger_name (str):  Name of the logger to get.
+
+    Returns:
+        logging.Logger: The logger object.
+
+    Raises:
+        ValueError: If the logger does not exist.
+    """
+    if logger_name not in logging.Logger.manager.loggerDict and logger_name not in logging.root.manager.loggerDict:
+        raise ValueError('Logger "'+str(logger_name)+'" not defined.')
+    return logging.getLogger(logger_name)
+
+
+def logger_setup(logger_name='plain_logger', config=None, env_prefix='LOGGER', init_messages=False):
     """Sets up logging configuration and returns the logger.
 
-    If env_prefix is unset, the default plain logger is used
     Args:
-        logger_name (str):  Name of the logger that needs to be used. By default plain logger is used. Current setup also supports json logger
+        logger_name (str):  Name of the logger that needs to be used.
         config (str) : Configuration string or path to configuration file or configuration file in via environment variable
-        env_prefix (str): Name of environment variable prefix containing the name of the app to be used. 
-                          If env_prefix is set then env_prefix_NAME and env_prefix_CFG have to be set.
+        env_prefix (str): Environment variable names prefix for overriding logger configuration.
         init_messages (bool): Whether to log init and test messages.
 
     Returns:
         logging.Logger: The logger object.
     """
+    if not isinstance(env_prefix, str) or not env_prefix:
+        raise ValueError('env_prefix is required to be a non-empty string.')
+    env_cfg = env_prefix + '_CFG'
+    env_name = env_prefix + '_NAME'
 
-    env_cfg = None
-    env_name = None
     # Configure logging
-    if env_prefix is not None:
-        env_cfg = env_prefix + '_CFG'
-        env_name = env_prefix + '_NAME'
-
-    load_config(config if env_cfg is None else os.getenv(env_cfg))
+    load_config(os.getenv(env_cfg, config))
 
     # Get logger
-    if env_prefix is not None:
-        logger_name = os.getenv(env_name)
-    else:
-        logger_name = logger_name
-    if logger_name not in logging.Logger.manager.loggerDict:
-        raise ValueError('Logger "'+logger_name+'" not defined.')
-    logger = logging.getLogger(logger_name)
+    logger = get_logger(os.getenv(env_name, logger_name))
 
     # Log configured done and test logger
     if init_messages:
@@ -188,7 +193,7 @@ def logger_setup(logger_name='plain_logger', config=None, env_prefix=None, init_
     return logger
 
 
-def flask_app_logger_setup(flask_app, env_prefix=None):
+def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, env_prefix='LOGGER'):
     """Sets up logging configuration, configures flask to use it, and returns the logger.
 
     Args:
@@ -199,17 +204,13 @@ def flask_app_logger_setup(flask_app, env_prefix=None):
     Returns:
         logging.Logger: The logger object.
     """
-
     # Configure logging and get logger
-    print("########")
-    print(env_prefix)
-    logger = logger_setup(env_prefix=env_prefix)
+    logger = logger_setup(logger_name=logger_name, config=config, env_prefix=env_prefix)
 
     # Replace flask logger
     flask_app.logger = logger
 
     # Replace werkzeug logger handlers
-    replace_logger_handlers('werkzeug', os.getenv(
-        env_prefix + '_NAME', 'plain_logger'))
+    replace_logger_handlers(logging.getLogger('werkzeug'), logger)
 
     return logger

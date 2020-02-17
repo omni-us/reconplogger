@@ -10,8 +10,8 @@
 reconplogger - omni:us python logger
 ====================================
 
-This repository contains the code of reconplogger, a python package to ease the
-standardization of logging within omni:us. The main design decision of
+This repository contains the code of reconplogger, a python package intended to
+ease the standardization of logging within omni:us. The main design decision of
 reconplogger is to allow total freedom to reconfigure loggers without hard
 coding anything.
 
@@ -51,10 +51,10 @@ See the `setup.cfg` file in the reconplogger source code for reference.
 Default logging configuration
 -----------------------------
 
-An feature that reconplogger provides is the possibility of externally setting
+A feature that reconplogger provides is the possibility of externally setting
 the logging configuration without having to change code or implement any parsing
 of configuration. However, if a logging configuration is not given externally,
-reconplogger provide a default configuration.
+reconplogger provides a default configuration.
 
 The default configuration defines three handlers, two of which are stream
 handlers and are set to DEBUG log level. The first handler called
@@ -76,32 +76,36 @@ down to calling one function to get the logger object. For regular python code
 (i.e. not a microservice) the function to use is
 :func:`reconplogger.logger_setup`. 
 
-This function gives you the ability to use the already existing logger, provide configuration to the logger
-via :code:`config` parameter and override these with the use of :code:`env_prefix` variable. When the
-:code:`env_prefix` is set, your environment should also contain :code:`env_prefix_NAME` and :code:`env_prefix_LOGGER`
-set, that is used to set the logger and configure it appropriately. 
+This function gives you the ability to use the already existing logger, provide
+configuration to the logger via :code:`config` parameter and override these with
+environment variables via :code:`env_prefix` parameter. If environment variables
+:code:`{env_prefix}_NAME` and :code:`{env_prefix}_CFG` these would override the
+:code:`logger_name` and :code:`config` parameters.
+
 The following code snippet illustrates the use:
 
 .. code-block:: python
 
     import reconplogger
 
-    ...
-
-    logger = reconplogger.logger_setup('LOGGER_NAME', 'LOGGER_CFG')
-
-    ...
-
+    # Default plain logger
+    logger = reconplogger.logger_setup()
     logger.info('My log message')
+
+    # Json logger and custom prefix
+    logger = reconplogger.logger_setup('json_logger', env_prefix='MYAPP')
+    logger.info('My log message in json format')
 
 If the environment variables are not set, this function returns the
 :code:`plain_logger` logger from the default configuration. Note that the
-environment variable names are not required to be :code:`LOGGER_CFG,
-LOGGER_NAME`. These can be chosen by the user for each particular application.
+environment variable names are not required to be prefixed by the default
+:code:`env_prefix='LOGGER'`. The prefix can be chosen by the user for each
+particular application.
 
 For functions or classes that receive logger object as an argument, it might be
 desired to set a default logger so that it can be called without specifying one.
-To have as default a null logger, the reconplogger module could be used as follows:
+To have as default a null logger, the reconplogger module could be used as
+follows:
 
 .. code-block:: python
 
@@ -121,7 +125,7 @@ The most important objective of reconplogger is to allow standardization of a
 structured logging format for all microservices developed. Thus, the logging
 from all microservices should be configured like explained here. The use is
 analogous to the previous case, but using the function
-:func:`reconplogger.flask_app_logger_setup` instead, and giving as second argument
+:func:`reconplogger.flask_app_logger_setup` instead, and giving as first argument
 the flask app object. Additional to the previous case, this function replaces
 the flask app and werkzeug loggers to use a reconplogger configured one. The usage
 would be as follows:
@@ -138,7 +142,7 @@ would be as follows:
 
     ...
 
-    logger = reconplogger.flask_app_logger_setup(env_prefix, app)
+    logger = reconplogger.flask_app_logger_setup(app)
 
     ## NOTE: do not change logger beyond this point!
 
@@ -160,7 +164,7 @@ environment variables should be set as:
 
 .. code-block:: yaml
 
-    LOGGER_CFG: reconplogger_default
+    LOGGER_CFG: reconplogger_default_cfg
     LOGGER_NAME: json_logger
 
 With the :code:`json_logger` logger, the format of the logs should look
@@ -280,7 +284,7 @@ of loading for each of the cases:
     reconplogger.load_config('LOGGER_CFG')
 
     ## Load default config
-    reconplogger.load_config('reconplogger_default')
+    reconplogger.load_config('reconplogger_default_cfg')
 
 
 Replacing logger handlers
@@ -297,8 +301,8 @@ as follows:
 
     import reconplogger
 
-    reconplogger.load_config('LOGGER_CFG')
-    reconplogger.replace_logger_handlers('some_logger_name', os.environ['LOGGER_NAME'])
+    logger = reconplogger.logger_setup('json_logger')
+    reconplogger.replace_logger_handlers('some_logger_name', logger)
 
 
 Contributing
