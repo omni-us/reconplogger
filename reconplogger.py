@@ -75,7 +75,6 @@ def load_config(cfg=None):
                     cfg_dict = yaml.safe_load(f.read())
             elif cfg in os.environ:
                 cfg_dict = yaml.safe_load(os.environ[cfg])
-            
             else:
                 try:
                     cfg_dict = ast.literal_eval(cfg)
@@ -154,7 +153,7 @@ def logger_setup(logger_name='plain_logger', config=None, env_prefix=None, init_
     If env_prefix is unset, the default plain logger is used
     Args:
         logger_name (str):  Name of the logger that needs to be used. By default plain logger is used. Current setup also supports json logger
-        config (str) : Configuration string or path to configuration file 
+        config (str) : Configuration string or path to configuration file or configuration file in via environment variable
         env_prefix (str): Name of environment variable prefix containing the name of the app to be used. 
                           If env_prefix is set then env_prefix_NAME and env_prefix_CFG have to be set.
         init_messages (bool): Whether to log init and test messages.
