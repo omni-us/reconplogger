@@ -3,6 +3,7 @@ import os
 import yaml
 import logging
 import logging.config
+import ast
 
 
 __version__ = '3.1.0'
@@ -74,11 +75,17 @@ def load_config(cfg=None):
                     cfg_dict = yaml.safe_load(f.read())
             elif cfg in os.environ:
                 cfg_dict = yaml.safe_load(os.environ[cfg])
+            
             else:
-                raise ValueError
+                try:
+                    cfg_dict = ast.literal_eval(cfg)
+                    if not isinstance(cfg_dict, dict):
+                        raise ValueError
+                except Exception as e:
+                    raise ValueError
         except Exception as ex:
             raise ValueError(
-                'Received string which is neither a path to an existing file or the name of an set environment variable :: '+str(ex))
+                'Received string which is neither a path to an existing file nor the name of an set environment variable nor a python dictionary string that can be consumed by logging.config.dictConfigb:: '+str(ex))
 
     logging.config.dictConfig(cfg_dict)
     # To prevent double logging if root logger is used
@@ -141,24 +148,35 @@ def test_logger(logger):
     logger.warning('reconplogger test warning message.')
 
 
-def logger_setup(logger_name='plain_logger', env_cfg=None, init_messages=False):
+def logger_setup(logger_name='plain_logger', config=None, env_prefix=None, init_messages=False):
     """Sets up logging configuration and returns the logger.
 
     If env_prefix is unset, the default plain logger is used
     Args:
         logger_name (str):  Name of the logger that needs to be used. By default plain logger is used. Current setup also supports json logger
-        env_prefix (str): Name of environment variable containing the name of the app to be used
+        config (str) : Configuration string or path to configuration file 
+        env_prefix (str): Name of environment variable prefix containing the name of the app to be used. 
+                          If env_prefix is set then env_prefix_NAME and env_prefix_CFG have to be set.
         init_messages (bool): Whether to log init and test messages.
 
     Returns:
         logging.Logger: The logger object.
     """
 
+    env_cfg = None
+    env_name = None
     # Configure logging
-    load_config(None if env_cfg is None else os.getenv(env_cfg))
+    if env_prefix is not None:
+        env_cfg = env_prefix + '_CFG'
+        env_name = env_prefix + '_NAME'
+
+    load_config(config if env_cfg is None else os.getenv(env_cfg))
 
     # Get logger
-    logger_name = logger_name
+    if env_prefix is not None:
+        logger_name = os.getenv(env_name)
+    else:
+        logger_name = logger_name
     if logger_name not in logging.Logger.manager.loggerDict:
         raise ValueError('Logger "'+logger_name+'" not defined.')
     logger = logging.getLogger(logger_name)
@@ -171,12 +189,12 @@ def logger_setup(logger_name='plain_logger', env_cfg=None, init_messages=False):
     return logger
 
 
-def flask_app_logger_setup(env_cfg, env_name, flask_app):
+def flask_app_logger_setup(flask_app, env_prefix=None):
     """Sets up logging configuration, configures flask to use it, and returns the logger.
 
     Args:
-        env_cfg (str): Name of environment variable containing the logging configuration.
-        env_name (str): Name of environment variable containing the logger to use.
+        env_prefix (str): Name of environment variable prefix containing the name of the app to be used. 
+                          If env_prefix is set then env_prefix_NAME and env_prefix_CFG have to be set.
         flask_app (flask.app.Flask): The flask app object.
 
     Returns:
@@ -185,14 +203,14 @@ def flask_app_logger_setup(env_cfg, env_name, flask_app):
 
     # Configure logging and get logger
     print("########")
-    print(env_name, env_cfg)
-    logger = logger_setup(logger_name=env_name, env_cfg=env_cfg)
+    print(env_prefix)
+    logger = logger_setup(env_prefix=env_prefix)
 
-    # Replace flask logger 
+    # Replace flask logger
     flask_app.logger = logger
 
-    # Replace werkzeug logger handlers 
+    # Replace werkzeug logger handlers
     replace_logger_handlers('werkzeug', os.getenv(
-        env_name, 'plain_logger'))
+        env_prefix + '_NAME', 'plain_logger'))
 
     return logger

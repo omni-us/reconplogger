@@ -74,10 +74,13 @@ One objective of reconplogger is to ease the use of logging and standardize the
 way it is done across all omni:us python code. The use of reconplogger comes
 down to calling one function to get the logger object. For regular python code
 (i.e. not a microservice) the function to use is
-:func:`reconplogger.logger_setup`. To this function you give as argument two
-strings, which are names of environment variables, one for the logging
-configuration and the other for the name of the logger to use. The following
-code snippet illustrates the use:
+:func:`reconplogger.logger_setup`. 
+
+This function gives you the ability to use the already existing logger, provide configuration to the logger
+via :code:`config` parameter and override these with the use of :code:`env_prefix` variable. When the
+:code:`env_prefix` is set, your environment should also contain :code:`env_prefix_NAME` and :code:`env_prefix_LOGGER`
+set, that is used to set the logger and configure it appropriately. 
+The following code snippet illustrates the use:
 
 .. code-block:: python
 
@@ -85,7 +88,7 @@ code snippet illustrates the use:
 
     ...
 
-    logger = reconplogger.logger_setup('LOGGER_CFG', 'LOGGER_NAME')
+    logger = reconplogger.logger_setup('LOGGER_NAME', 'LOGGER_CFG')
 
     ...
 
@@ -118,7 +121,7 @@ The most important objective of reconplogger is to allow standardization of a
 structured logging format for all microservices developed. Thus, the logging
 from all microservices should be configured like explained here. The use is
 analogous to the previous case, but using the function
-:func:`reconplogger.flask_app_logger_setup` instead, and giving as a third argument
+:func:`reconplogger.flask_app_logger_setup` instead, and giving as second argument
 the flask app object. Additional to the previous case, this function replaces
 the flask app and werkzeug loggers to use a reconplogger configured one. The usage
 would be as follows:
@@ -135,7 +138,7 @@ would be as follows:
 
     ...
 
-    logger = reconplogger.flask_app_logger_setup('LOGGER_CFG', os.getenv('LOGGER_NAME'), app)
+    logger = reconplogger.flask_app_logger_setup(env_prefix, app)
 
     ## NOTE: do not change logger beyond this point!
 
@@ -247,7 +250,7 @@ Then, in the python code the logger would be used as follows:
 .. code-block:: python
 
     >>> import reconplogger
-    >>> logger = reconplogger.logger_setup('LOGGER_CFG', 'LOGGER_NAME')
+    >>> logger = reconplogger.logger_setup(env_prefix='LOGGER')
     >>> logger.error('My error message')
     ERROR 2019-10-18 14:45:22,629 <stdin> 16876 139918773925696 My error message
 
