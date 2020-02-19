@@ -24,6 +24,7 @@ The package contains essentially three things:
 
   - Loading logging configuration from any of: config file, environment variable, or default.
   - Replacing the handlers of an existing Logger object.
+  - Function to add a file handler to a logger.
 
 
 How to use
@@ -74,13 +75,7 @@ One objective of reconplogger is to ease the use of logging and standardize the
 way it is done across all omni:us python code. The use of reconplogger comes
 down to calling one function to get the logger object. For regular python code
 (i.e. not a microservice) the function to use is
-:func:`reconplogger.logger_setup`. 
-
-This function gives you the ability to use the already existing logger, provide
-configuration to the logger via :code:`config` parameter and override these with
-environment variables via :code:`env_prefix` parameter. If environment variables
-:code:`{env_prefix}_NAME` and :code:`{env_prefix}_CFG` these would override the
-:code:`logger_name` and :code:`config` parameters.
+:func:`reconplogger.logger_setup`.
 
 The following code snippet illustrates the use:
 
@@ -96,15 +91,21 @@ The following code snippet illustrates the use:
     logger = reconplogger.logger_setup('json_logger', env_prefix='MYAPP')
     logger.info('My log message in json format')
 
-If the environment variables are not set, this function returns the
-:code:`plain_logger` logger from the default configuration. Note that the
-environment variable names are not required to be prefixed by the default
-:code:`env_prefix='LOGGER'`. The prefix can be chosen by the user for each
-particular application.
+This function gives you the ability to set the default logger to use
+(:code:`logger_name` argument whose default value is :code:`plain_logger`) and
+optionally provide a logging :code:`config` and/or a logging :code:`level` that
+overrides the level in the config.
+
+All of these values can be overridden via environment variables whose names are
+prefixed by the value of the :code:`env_prefix` argument. The environment
+variables supported are: :code:`{env_prefix}_CFG`, :code:`{env_prefix}_NAME` and
+:code:`{env_prefix}_LEVEL`. Note that the environment variable names are not
+required to be prefixed by the default :code:`env_prefix='LOGGER'`. The prefix
+can be chosen by the user for each particular application.
 
 For functions or classes that receive logger object as an argument, it might be
-desired to set a default logger so that it can be called without specifying one.
-To have as default a null logger, the reconplogger module could be used as
+desired to set a non-logging default so that it can be called without specifying
+one. For this reconplogger defines :code:`null logger` that could be used as
 follows:
 
 .. code-block:: python
@@ -133,7 +134,6 @@ would be as follows:
 .. code-block:: python
 
     import reconplogger
-    import os
     from flask import Flask
 
     ...
@@ -142,7 +142,7 @@ would be as follows:
 
     ...
 
-    logger = reconplogger.flask_app_logger_setup(app)
+    logger = reconplogger.flask_app_logger_setup(app, level='DEBUG')
 
     ## NOTE: do not change logger beyond this point!
 
@@ -155,17 +155,17 @@ would be as follows:
 
 An important note is that after configuring the logger, the code should not
 modify the logger configuration. For example, the logging level should not be
-modified, or only modified by providing a non-default option. Adding an
-additional handler to the logger is not a problem. This could be desired for
-example to also log to a file.
+modified. Adding an additional handler to the logger is not a problem. This
+could be desired for example to additionally log to a file.
 
 In the helm `values.yaml` file of the microservice, the default values for the
 environment variables should be set as:
 
 .. code-block:: yaml
 
-    LOGGER_CFG: reconplogger_default_cfg
+    LOGGER_CFG:
     LOGGER_NAME: json_logger
+    LOGGER_LEVEL: DEBUG
 
 With the :code:`json_logger` logger, the format of the logs should look
 something like the following::
@@ -218,36 +218,34 @@ Overriding logging configuration
 --------------------------------
 
 An important feature of reconplogger is that the logging configuration of apps
-that use it can be easily changed via the environment variables given to the
-logger setup functions. Using the same environment variables as the previous
-examples, the following could be done. First set the environment variables with
-the desired logging configuration and logger name:
+that use it can be easily changed via the environment variables. First set the
+environment variables with the desired logging configuration and logger name:
 
 .. code-block:: bash
 
     export LOGGER_NAME="example_logger"
 
-    export LOGGER_CFG="{
-        'version': 1,
-        'formatters': {
-            'verbose': {
-                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-            },
+    export LOGGER_CFG='{
+        "version": 1,
+        "formatters": {
+            "verbose": {
+                "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+            }
         },
-        'handlers': {
-            'console':{
-                'level':'DEBUG',
-                'class':'logging.StreamHandler',
-                'formatter': 'verbose'
-            },
+        "handlers": {
+            "console":{
+                "level":"DEBUG",
+                "class":"logging.StreamHandler",
+                "formatter": "verbose"
+            }
         },
-        'loggers': {
-            'example_logger': {
-                'handlers': ['console'],
-                'level': 'ERROR',
-            },
+        "loggers": {
+            "example_logger": {
+                "handlers": ["console"],
+                "level": "ERROR",
+            }
         }
-    }"
+    }'
 
 Then, in the python code the logger would be used as follows:
 
@@ -267,11 +265,11 @@ Loading configuration
 ---------------------
 
 The :func:`reconplogger.load_config` function allows loading of a python logging
-configuration. The loading of configuration can be from a file (giving its
-path), from an environment variable (giving the variable name), or loading the
-default configuration that comes with reconplogger. The loading from file and from
-environment variable expects the format to be yaml or json. See below examples
-of loading for each of the cases:
+configuration. The format config can be either json or yaml. The loading of
+configuration can be from a file (giving its path), from an environment variable
+(giving the variable name), a raw configuration string, or loading the default
+configuration that comes with reconplogger. See below examples of loading for
+each of the cases:
 
 .. code-block:: python
 
@@ -294,8 +292,7 @@ In some cases it might be needed to replace the handlers of some already
 existing logger. For this reconplogger provides the
 :func:`reconplogger.replace_logger_handlers` function. To use it, simply provide
 the logger in which to replace the handlers and the logger from where to get the
-handlers. Using the same environment variables as above, the procedure would be
-as follows:
+handlers. The procedure would be as follows:
 
 .. code-block:: python
 
@@ -308,15 +305,16 @@ as follows:
 Contributing
 ============
 
-Contributions to this package are very welcome. When you intend to work with the
+Contributions to this package are very welcome. When you plan to work with the
 source code, note that this project does not include a `requirements.txt` file.
 This is by intention. To make it very clear what are the requirements for
 different use cases, all the requirements of the project are stored in the file
 `setup.cfg`. The basic runtime requirements are defined in section
 :code:`[options]` in the :code:`install_requires` entry. All optional
-requirements are stored in section :code:`[options.extras_require]`. There is a
-`dev` extras require to be used by developers (e.g. requirements to run the unit
-tests) and a :code:`bump` extras require for the maintainer of the package.
+requirements are stored in section :code:`[options.extras_require]`. There are
+:code:`test`, :code:`dev` and :code:`doc` extras require to be used by
+developers (e.g. requirements to run the unit tests) and an :code:`all` extras
+require for optional runtime requirements, namely Flask support.
 
 The recommended way to work with the source code is the following. First clone
 the repository, then create a virtual environment, activate it and finally
@@ -363,14 +361,14 @@ Using bump version
 
 Only the maintainer of this repo should bump versions and this should be done
 only on the master branch. To bump the version it is required to use the
-bumpversion that should already be installed if :code:`pip3 install --editable
-.[dev,doc,test,all]` was run as previously instructed.
+bumpversion command that should already be installed if :code:`pip3 install
+--editable .[dev,doc,test,all]` was run as previously instructed.
 
 .. code-block:: bash
 
-    bumpversion major/minor/path
+    bumpversion major/minor/patch
 
-Push the tags to the repository as well 
+Push the tags to the repository as well.
 
 .. code-block:: bash
 

@@ -49,6 +49,14 @@ reconplogger_default_cfg = {
     },
 }
 
+logging_levels = {
+    'CRITICAL': logging.CRITICAL,
+    'ERROR':    logging.ERROR,
+    'WARNING':  logging.WARNING,
+    'INFO':     logging.INFO,
+    'DEBUG':    logging.DEBUG,
+    'NOTSET':   logging.NOTSET,
+}
 
 null_logger = logging.Logger('null')
 null_logger.addHandler(logging.NullHandler())
@@ -63,7 +71,7 @@ def load_config(cfg=None):
     Returns:
         The logging package object.
     """
-    if cfg is None or cfg == 'reconplogger_default_cfg' or (cfg in os.environ and os.environ[cfg] == 'reconplogger_default_cfg'):
+    if cfg is None or cfg in {'', 'reconplogger_default_cfg'} or (cfg in os.environ and os.environ[cfg] == 'reconplogger_default_cfg'):
         cfg_dict = reconplogger_default_cfg
     elif isinstance(cfg, dict):
         cfg_dict = cfg
@@ -162,12 +170,13 @@ def get_logger(logger_name):
     return logging.getLogger(logger_name)
 
 
-def logger_setup(logger_name='plain_logger', config=None, env_prefix='LOGGER', init_messages=False):
+def logger_setup(logger_name='plain_logger', config=None, level=None, env_prefix='LOGGER', init_messages=False):
     """Sets up logging configuration and returns the logger.
 
     Args:
         logger_name (str):  Name of the logger that needs to be used.
-        config (str) : Configuration string or path to configuration file or configuration file in via environment variable
+        config (str): Configuration string or path to configuration file or configuration file via environment variable.
+        level (str): Optional logging level that overrides one in config.
         env_prefix (str): Environment variable names prefix for overriding logger configuration.
         init_messages (bool): Whether to log init and test messages.
 
@@ -178,12 +187,25 @@ def logger_setup(logger_name='plain_logger', config=None, env_prefix='LOGGER', i
         raise ValueError('env_prefix is required to be a non-empty string.')
     env_cfg = env_prefix + '_CFG'
     env_name = env_prefix + '_NAME'
+    env_level = env_prefix + '_LEVEL'
 
     # Configure logging
     load_config(os.getenv(env_cfg, config))
 
     # Get logger
     logger = get_logger(os.getenv(env_name, logger_name))
+
+    # Override log level if set
+    if env_level in os.environ:
+        level = os.getenv(env_level)
+    if level:
+        if isinstance(level, str):
+            if level not in logging_levels:
+                raise ValueError('Invalid logging level: "'+level+'".')
+            level = logging_levels[level]
+        else:
+            raise ValueError('Expected level argument to be a string.')
+        logger.setLevel(level)
 
     # Log configured done and test logger
     if init_messages:
@@ -193,19 +215,21 @@ def logger_setup(logger_name='plain_logger', config=None, env_prefix='LOGGER', i
     return logger
 
 
-def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, env_prefix='LOGGER'):
+def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, level=None, env_prefix='LOGGER'):
     """Sets up logging configuration, configures flask to use it, and returns the logger.
 
     Args:
-        env_prefix (str): Name of environment variable prefix containing the name of the app to be used. 
-                          If env_prefix is set then env_prefix_NAME and env_prefix_CFG have to be set.
         flask_app (flask.app.Flask): The flask app object.
+        logger_name (str):  Name of the logger that needs to be used.
+        config (str): Configuration string or path to configuration file or configuration file via environment variable.
+        level (str): Optional logging level that overrides one in config.
+        env_prefix (str): Environment variable names prefix for overriding logger configuration.
 
     Returns:
         logging.Logger: The logger object.
     """
     # Configure logging and get logger
-    logger = logger_setup(logger_name=logger_name, config=config, env_prefix=env_prefix)
+    logger = logger_setup(logger_name=logger_name, config=config, level=level, env_prefix=env_prefix)
 
     # Replace flask logger
     flask_app.logger = logger
