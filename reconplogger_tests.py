@@ -20,15 +20,14 @@ class TestReconplogger(unittest.TestCase):
 
     def test_log_level(self):
         """Test load config with the default config and plain logger changing the log level."""
-        reconplogger.load_config('reconplogger_default_cfg')
-        logger = logging.getLogger('plain_logger')
-        logger.setLevel(logging.ERROR)
-        info_msg = 'info message'
-        error_msg = 'error message'
-        with LogCapture() as log:
-            logger.info(info_msg)
-            logger.error(error_msg)
-            log.check(('plain_logger', 'ERROR', error_msg))
+        logger = reconplogger.logger_setup(level='INFO')
+        self.assertEqual(logger.level, logging.INFO)
+        logger = reconplogger.logger_setup(level='ERROR')
+        self.assertEqual(logger.level, logging.ERROR)
+        os.environ['LOGGER_LEVEL'] = 'WARNING'
+        logger = reconplogger.logger_setup(level='INFO', env_prefix='LOGGER')
+        self.assertEqual(logger.level, logging.WARNING)
+        del os.environ['LOGGER_LEVEL']
 
     def test_default_logger_with_exception(self):
         """Test exception logging with the default config and json logger."""
