@@ -2,6 +2,8 @@
 
 import os
 import unittest
+import shutil
+import tempfile
 import logging
 import reconplogger
 from testfixtures import LogCapture, compare, Comparison
@@ -21,12 +23,12 @@ class TestReconplogger(unittest.TestCase):
     def test_log_level(self):
         """Test load config with the default config and plain logger changing the log level."""
         logger = reconplogger.logger_setup(level='INFO')
-        self.assertEqual(logger.level, logging.INFO)
+        self.assertEqual(logger.handlers[0].level, logging.INFO)
         logger = reconplogger.logger_setup(level='ERROR')
-        self.assertEqual(logger.level, logging.ERROR)
+        self.assertEqual(logger.handlers[0].level, logging.ERROR)
         os.environ['LOGGER_LEVEL'] = 'WARNING'
         logger = reconplogger.logger_setup(level='INFO', env_prefix='LOGGER')
-        self.assertEqual(logger.level, logging.WARNING)
+        self.assertEqual(logger.handlers[0].level, logging.WARNING)
         del os.environ['LOGGER_LEVEL']
 
     def test_default_logger_with_exception(self):
@@ -58,6 +60,12 @@ class TestReconplogger(unittest.TestCase):
         with LogCapture() as log:
             logger.info(info_msg)
             log.check(('json_logger', 'INFO', info_msg))
+
+    def test_init_messages(self):
+        logger = reconplogger.logger_setup(init_messages=True)
+        with self.assertLogs(level='WARNING') as log:
+            reconplogger.test_logger(logger)
+            self.assertTrue(any(['WARNING' in v and 'reconplogger' in v for v in log.output]))
 
     def test_logger_setup_env_prefix(self):
         """Test logger setup with specifying environment prefix."""
@@ -122,6 +130,36 @@ class TestReconplogger(unittest.TestCase):
             )
         del os.environ['RECONPLOGGER_CFG']
         del os.environ['RECONPLOGGER_NAME']
+
+    def test_add_file_handler(self):
+        """Test the use of add_file_handler."""
+        tmpdir = tempfile.mkdtemp(prefix='_reconplogger_test_')
+        error_msg = 'error message'
+        debug_msg = 'debug message'
+
+        log_file = os.path.join(tmpdir, 'file1.log')
+        logger = reconplogger.logger_setup(logger_name='plain_logger', level='ERROR')
+        reconplogger.add_file_handler(logger, file_path=log_file, level='DEBUG')
+        self.assertEqual(logger.handlers[0].level, logging.ERROR)
+        self.assertEqual(logger.handlers[1].level, logging.DEBUG)
+        logger.error(error_msg)
+        logger.debug(debug_msg)
+        logger.handlers[1].close()
+        self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
+        self.assertTrue(any([debug_msg in line for line in open(log_file).readlines()]))
+
+        log_file = os.path.join(tmpdir, 'file2.log')
+        logger = reconplogger.logger_setup(logger_name='plain_logger', level='DEBUG')
+        reconplogger.add_file_handler(logger, file_path=log_file, level='ERROR')
+        self.assertEqual(logger.handlers[0].level, logging.DEBUG)
+        self.assertEqual(logger.handlers[1].level, logging.ERROR)
+        logger.error(error_msg)
+        logger.debug(debug_msg)
+        logger.handlers[1].close()
+        self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
+        self.assertFalse(any([debug_msg in line for line in open(log_file).readlines()]))
+
+        shutil.rmtree(tmpdir)
 
 
 def run_tests():
