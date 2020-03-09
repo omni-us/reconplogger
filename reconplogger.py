@@ -3,6 +3,7 @@ import os
 import yaml
 import logging
 import logging.config
+from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 
 
 __version__ = '4.1.0'
@@ -25,10 +26,12 @@ reconplogger_default_cfg = {
         'plain_handler': {
             'class': 'logging.StreamHandler',
             'formatter': 'plain',
+            'level': 'WARNING',
         },
         'json_handler': {
             'class': 'logging.StreamHandler',
             'formatter': 'json',
+            'level': 'WARNING',
         },
         'null_handler': {
             'class': 'logging.NullHandler',
@@ -50,13 +53,14 @@ reconplogger_default_cfg = {
 }
 
 logging_levels = {
-    'CRITICAL': logging.CRITICAL,
-    'ERROR':    logging.ERROR,
-    'WARNING':  logging.WARNING,
-    'INFO':     logging.INFO,
-    'DEBUG':    logging.DEBUG,
-    'NOTSET':   logging.NOTSET,
+    'CRITICAL': CRITICAL,
+    'ERROR':    ERROR,
+    'WARNING':  WARNING,
+    'INFO':     INFO,
+    'DEBUG':    DEBUG,
+    'NOTSET':   NOTSET,
 }
+logging_levels.update({v: v for v in logging_levels})
 
 null_logger = logging.Logger('null')
 null_logger.addHandler(logging.NullHandler())
@@ -131,18 +135,21 @@ def replace_logger_handlers(logger, handlers='plain_logger'):
     logger.handlers = list(handlers)
 
 
-def add_file_handler(logger, file_path, format=reconplogger_format, level=logging.DEBUG):
+def add_file_handler(logger, file_path, format=reconplogger_format, level='DEBUG'):
     """Adds a file handler to a given logger.
 
     Args:
         logger (logging.Logger): Logger object where to add the file handler.
         file_path (str): Path to log file for handler.
         format (str): Format for logging.
-        level (int): Logging level for the handler.
+        level (str or int or None): Logging level for the handler.
     """
     fileHandler = logging.FileHandler(file_path)
     fileHandler.setFormatter(logging.Formatter(format))
-    fileHandler.setLevel(level)
+    if level is not None:
+        if level not in logging_levels:
+            raise ValueError('Invalid logging level: "'+str(level)+'".')
+        fileHandler.setLevel(logging_levels[level])
     logger.addHandler(fileHandler)
 
 
@@ -175,8 +182,8 @@ def logger_setup(logger_name='plain_logger', config=None, level=None, env_prefix
 
     Args:
         logger_name (str):  Name of the logger that needs to be used.
-        config (str): Configuration string or path to configuration file or configuration file via environment variable.
-        level (str): Optional logging level that overrides one in config.
+        config (str or None): Configuration string or path to configuration file or configuration file via environment variable.
+        level (str or int or None): Optional logging level that overrides one in config.
         env_prefix (str): Environment variable names prefix for overriding logger configuration.
         init_messages (bool): Whether to log init and test messages.
 
@@ -201,11 +208,12 @@ def logger_setup(logger_name='plain_logger', config=None, level=None, env_prefix
     if level:
         if isinstance(level, str):
             if level not in logging_levels:
-                raise ValueError('Invalid logging level: "'+level+'".')
+                raise ValueError('Invalid logging level: "'+str(level)+'".')
             level = logging_levels[level]
         else:
             raise ValueError('Expected level argument to be a string.')
-        logger.setLevel(level)
+        for handler in logger.handlers:
+            handler.setLevel(level)
 
     # Log configured done and test logger
     if init_messages:
