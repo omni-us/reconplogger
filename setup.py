@@ -2,8 +2,9 @@
 
 from setuptools import setup, Command
 import re
+import sys
 
-VERSION = next(filter(lambda x: x.startswith('__version__ = '), open('reconplogger.py').readlines())).strip().replace("'","").split()[-1]
+
 NAME_TESTS = next(filter(lambda x: x.startswith('test_suite = '), open('setup.cfg').readlines())).strip().split()[-1]
 LONG_DESCRIPTION = re.sub(':class:|:func:|:ref:', '', open('README.rst').read())
 CMDCLASS = {}
@@ -21,7 +22,9 @@ try:
         def run(self):
             cov = coverage.Coverage()
             cov.start()
-            __import__(NAME_TESTS).run_tests()
+            rc = __import__(NAME_TESTS).run_tests().wasSuccessful()
+            if not rc:
+                sys.exit(not rc)
             cov.stop()
             cov.save()
             cov.report()
@@ -44,6 +47,5 @@ except Exception:
 
 
 ## Run setuptools setup ##
-setup(version=VERSION,
-      long_description=LONG_DESCRIPTION,
+setup(long_description=LONG_DESCRIPTION,
       cmdclass=CMDCLASS)
