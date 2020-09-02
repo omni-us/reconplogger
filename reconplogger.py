@@ -4,10 +4,27 @@ import yaml
 import logging
 import logging.config
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+import uuid
+import sys
+import time
 
 
 __version__ = '4.2.0'
 
+
+try:
+    # If flask is installed import the request context objects
+    from flask import request, g, has_request_context
+    # If requests is installed patch the calls to add the correlation id
+    import requests
+    def _request_patch(slf, *args, **kwargs):
+        headers = kwargs.pop('headers', {})
+        headers["Correlation-ID"] = g.correlation_id
+        return slf.request_orig(*args, **kwargs, headers=headers)
+    setattr(requests.sessions.Session, 'request_orig', requests.sessions.Session.request)
+    requests.sessions.Session.request = _request_patch
+except:
+    pass
 
 reconplogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
 
@@ -239,10 +256,40 @@ def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, l
     # Configure logging and get logger
     logger = logger_setup(logger_name=logger_name, config=config, level=level, env_prefix=env_prefix)
 
+    # Add flask before and after request functions to augment the logs
+    def _flask_logging_before_request():
+        g.correlation_id = request.headers.get("Correlation-ID", str(uuid.uuid4()))
+        g.start_time = time.time()
+    flask_app.before_request_funcs.setdefault(None, []).append(_flask_logging_before_request)
+
+    def _flask_logging_after_request(response):
+        response.headers.set("Correlation-ID", g.correlation_id)
+        logger.info("Request is completed", extra={
+            "http_endpoint": request.path,
+            "http_method": request.method,
+            "http_response_code": response.status_code,
+            "http_response_size": sys.getsizeof(response),
+            "http_input_payload_size": request.content_length,
+            "http_input_payload_type": request.content_type,
+            "http_response_time": str(time.time() - g.start_time),
+        })
+        return response
+    flask_app.after_request_funcs.setdefault(None, []).append(_flask_logging_after_request)
+
+    # Add logging filter to augment the logs
+    class FlaskLoggingFilter(logging.Filter):
+        def filter(self, record):
+            if has_request_context():
+                record.correlation_id = g.correlation_id
+            return True
+    logger.addFilter(FlaskLoggingFilter())
+
     # Replace flask logger
     flask_app.logger = logger
 
-    # Replace werkzeug logger handlers
-    replace_logger_handlers(logging.getLogger('werkzeug'), logger)
+    # Setup werkzeug logger
+    werkzeug_logger = logging.getLogger('werkzeug')
+    replace_logger_handlers(werkzeug_logger, logger)
+    werkzeug_logger.level = WARNING
 
     return logger

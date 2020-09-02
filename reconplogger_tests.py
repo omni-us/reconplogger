@@ -119,6 +119,9 @@ class TestReconplogger(unittest.TestCase):
         app = Flask(__name__)
         reconplogger.flask_app_logger_setup(
             env_prefix=env_prefix, flask_app=app)
+        assert app.logger.filters
+        assert app.before_request_funcs
+        assert app.after_request_funcs
         flask_msg = 'flask message'
         werkzeug_msg = 'werkzeug message'
         with LogCapture() as log:
