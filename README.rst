@@ -131,10 +131,10 @@ the flask app object.
 
 Additional to the previous case, this function:
 
-- replaces the flask app and werkzeug loggers to use a reconplogger configured one.
-- add to the logs the correlation_id
+- Replaces the flask app and werkzeug loggers to use a reconplogger configured one.
+- Add to the logs the correlation_id
 - Add before and after request functions to log the request details when the request is processed
-- patch the *requests* library forwarding the correlation id in the any call to other microservices
+- Patch the *requests* library forwarding the correlation id in any call to other microservices
 
 **What is the correlation ID?**
 In a system build with microservices we need a way to correlate logs coming from different microservices to the same "external" call.
