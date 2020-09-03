@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import unittest
 import shutil
 import tempfile
@@ -120,7 +121,7 @@ class TestReconplogger(unittest.TestCase):
         app = Flask(__name__)
         reconplogger.flask_app_logger_setup(
             env_prefix=env_prefix, flask_app=app)
-        assert app.logger.filters
+        assert app.logger.filters  # pylint: disable=no-member
         assert app.before_request_funcs
         assert app.after_request_funcs
         flask_msg = 'flask message'
@@ -147,7 +148,7 @@ class TestReconplogger(unittest.TestCase):
 
         @app.route('/')
         def hello_world():
-            app.logger.info(flask_msg)
+            app.logger.info(flask_msg)  # pylint: disable=no-member
             return 'Hello, World!'
         client = app.test_client()
 
@@ -205,8 +206,35 @@ class TestReconplogger(unittest.TestCase):
 
 def run_tests():
     tests = unittest.defaultTestLoader.loadTestsFromTestCase(TestReconplogger)
-    return unittest.TextTestRunner(verbosity=2).run(tests)
+    if not unittest.TextTestRunner(verbosity=2).run(tests).wasSuccessful():
+        sys.exit(True)
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
+def run_test_coverage():
+    try:
+        import coverage
+    except:
+        print('error: coverage package not found, run_test_coverage requires it.')
+        sys.exit(True)
+    cov = coverage.Coverage(source=['reconplogger'])
+    cov.start()
+    del sys.modules['reconplogger']
+    import reconplogger
+    run_tests()
+    cov.stop()
+    cov.save()
+    cov.report()
+    if 'xml' in sys.argv:
+        outfile = sys.argv[sys.argv.index('xml')+1]
+        cov.xml_report(outfile=outfile)
+        print('\nSaved coverage report to '+outfile+'.')
+    else:
+        cov.html_report(directory='htmlcov')
+        print('\nSaved html coverage report to htmlcov directory.')
+
+
+if __name__ == '__main__':
+    if 'coverage' in sys.argv:
+        run_test_coverage()
+    else:
+        run_tests()
