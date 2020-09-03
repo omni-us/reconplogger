@@ -19,7 +19,8 @@ try:
     import requests
     def _request_patch(slf, *args, **kwargs):
         headers = kwargs.pop('headers', {})
-        headers["Correlation-ID"] = g.correlation_id
+        if has_request_context():
+            headers["Correlation-ID"] = g.correlation_id
         return slf.request_orig(*args, **kwargs, headers=headers)
     setattr(requests.sessions.Session, 'request_orig', requests.sessions.Session.request)
     requests.sessions.Session.request = _request_patch
