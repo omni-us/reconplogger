@@ -127,9 +127,25 @@ structured logging format for all microservices developed. Thus, the logging
 from all microservices should be configured like explained here. The use is
 analogous to the previous case, but using the function
 :func:`reconplogger.flask_app_logger_setup` instead, and giving as first argument
-the flask app object. Additional to the previous case, this function replaces
-the flask app and werkzeug loggers to use a reconplogger configured one. The usage
-would be as follows:
+the flask app object.
+
+Additional to the previous case, this function:
+
+- Replaces the flask app and werkzeug loggers to use a reconplogger configured one.
+- Add to the logs the correlation_id
+- Add before and after request functions to log the request details when the request is processed
+- Patch the *requests* library forwarding the correlation id in any call to other microservices
+
+**What is the correlation ID?**
+In a system build with microservices we need a way to correlate logs coming from different microservices to the same "external" call.
+For example when a user of our system do a call to the MicroserviceA this could need to retrieve some information from the MicroserviceB,
+if there is an error and we want to check the logs of the MicroserviceB related to the user call we don't have a way to correlate them,
+to solve this we use the correlation id!
+Its a uuid4 that its passed in the headers of the rest calls and will be forwarded automatically when we do calls with the library *requests*,
+if the correlation id its not present in the request headers it will be generated, all of this is taken care in the background by this library.
+
+
+The usage would be as follows:
 
 .. code-block:: python
 
@@ -150,6 +166,14 @@ would be as follows:
 
     ## Use logger in code
     myclass = MyClass(..., logger=logger)
+
+    ...
+
+    ## User logger in a flask request
+    @app.route('/')
+    def hello_world():
+        logger.info('i like logs')
+    return 'Hello, World!'
 
     ...
 
@@ -177,6 +201,9 @@ something like the following::
     {"asctime": "2018-09-05 17:38:38,137", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 25, "message": "division by zero"}
     {"asctime": "2018-09-05 17:38:38,138", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 33, "message": "Exception has occured", "exc_info": "Traceback (most recent call last):\n  File \"reconplogger/tests/test_formatter.py\", line 31, in test_exception_with_trace\n    b = 100 / 0\nZeroDivisionError: division by zero"}
     {"asctime": "2018-09-05 17:38:38,138", "levelname": "INFO", "filename": "test_formatter.py", "lineno": 37, "message": "Hello world", "context check": "check"}
+
+    {"asctime": "2020-09-02 17:20:16,428", "levelname": "INFO", "filename": "hello.py", "lineno": 12, "message": "i like logs", "correlation_id": "3958f378-5d48-4e1c-b83b-3c6d9f95faec"}
+    {"asctime": "2020-09-02 17:20:16,428", "levelname": "INFO", "filename": "reconplogger.py", "lineno": 271, "message": "Request is completed", "http_endpoint": "/", "http_method": "GET", "http_response_code": 200, "http_response_size": 56, "http_input_payload_size": null, "http_input_payload_type": null, "http_response_time": "0.0002014636993408203", "correlation_id": "3958f378-5d48-4e1c-b83b-3c6d9f95faec"}
 
 
 Use of the logger object
