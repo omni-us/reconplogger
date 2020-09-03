@@ -5,6 +5,7 @@ import unittest
 import shutil
 import tempfile
 import logging
+import uuid
 import reconplogger
 from testfixtures import LogCapture, compare, Comparison
 from flask import Flask
@@ -131,6 +132,43 @@ class TestReconplogger(unittest.TestCase):
                 ('json_logger', 'WARNING', flask_msg),
                 ('werkzeug', 'WARNING', werkzeug_msg),
             )
+        del os.environ['RECONPLOGGER_CFG']
+        del os.environ['RECONPLOGGER_NAME']
+
+    def test_flask_app_correlation_id(self):
+        """Test that the flask logs contains the correct correlation id"""
+        env_prefix = 'RECONPLOGGER'
+        os.environ['RECONPLOGGER_CFG'] = 'reconplogger_default_cfg'
+        os.environ['RECONPLOGGER_NAME'] = 'json_logger'
+        app = Flask(__name__)
+        reconplogger.flask_app_logger_setup(
+            env_prefix=env_prefix, flask_app=app)
+        flask_msg = 'flask message with correlation id'
+
+        @app.route('/')
+        def hello_world():
+            app.logger.info(flask_msg)
+            return 'Hello, World!'
+        client = app.test_client()
+
+        # Check correlation id propagation
+        with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
+            correlation_id = str(uuid.uuid4())
+            client.get("/", headers={'Correlation-ID': correlation_id})
+            logs.check(
+                ('json_logger', 'INFO', flask_msg, correlation_id),
+                ('json_logger', 'INFO', "Request is completed", correlation_id),
+            )
+        # Check correlation id creation
+        with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
+            client.get("/")
+            correlation_id = logs.actual()[0][3]
+            uuid.UUID(correlation_id)
+            logs.check(
+                ('json_logger', 'INFO', flask_msg, correlation_id),
+                ('json_logger', 'INFO', "Request is completed", correlation_id),
+            )
+
         del os.environ['RECONPLOGGER_CFG']
         del os.environ['RECONPLOGGER_NAME']
 
