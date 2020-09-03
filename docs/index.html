@@ -1,38 +1,39 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>reconplogger - omni:us python logger &mdash; reconplogger 4.2.0 documentation</title>
+  <title>reconplogger - omni:us python logger &mdash; reconplogger 4.3.1 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="API Reference" href="api.html" /> 
@@ -49,7 +50,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> reconplogger
+            <a href="#" class="icon icon-home" alt="Documentation Home"> reconplogger
           
 
           
@@ -59,7 +60,7 @@
             
             
               <div class="version">
-                4.2.0
+                4.3.1
               </div>
             
           
@@ -76,6 +77,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -90,6 +92,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -128,7 +131,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#">Docs</a> &raquo;</li>
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
         
       <li>reconplogger - omni:us python logger</li>
     
@@ -254,9 +257,22 @@ structured logging format for all microservices developed. Thus, the logging
 from all microservices should be configured like explained here. The use is
 analogous to the previous case, but using the function
 <a class="reference internal" href="api.html#reconplogger.flask_app_logger_setup" title="reconplogger.flask_app_logger_setup"><code class="xref py py-func docutils literal notranslate"><span class="pre">reconplogger.flask_app_logger_setup()</span></code></a> instead, and giving as first argument
-the flask app object. Additional to the previous case, this function replaces
-the flask app and werkzeug loggers to use a reconplogger configured one. The usage
-would be as follows:</p>
+the flask app object.</p>
+<p>Additional to the previous case, this function:</p>
+<ul class="simple">
+<li><p>Replaces the flask app and werkzeug loggers to use a reconplogger configured one.</p></li>
+<li><p>Add to the logs the correlation_id</p></li>
+<li><p>Add before and after request functions to log the request details when the request is processed</p></li>
+<li><p>Patch the <em>requests</em> library forwarding the correlation id in any call to other microservices</p></li>
+</ul>
+<p><strong>What is the correlation ID?</strong>
+In a system build with microservices we need a way to correlate logs coming from different microservices to the same “external” call.
+For example when a user of our system do a call to the MicroserviceA this could need to retrieve some information from the MicroserviceB,
+if there is an error and we want to check the logs of the MicroserviceB related to the user call we don’t have a way to correlate them,
+to solve this we use the correlation id!
+Its a uuid4 that its passed in the headers of the rest calls and will be forwarded automatically when we do calls with the library <em>requests</em>,
+if the correlation id its not present in the request headers it will be generated, all of this is taken care in the background by this library.</p>
+<p>The usage would be as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">reconplogger</span>
 <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
 
@@ -274,6 +290,14 @@ would be as follows:</p>
 
 <span class="c1">## Use logger in code</span>
 <span class="n">myclass</span> <span class="o">=</span> <span class="n">MyClass</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+<span class="c1">## User logger in a flask request</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hello_world</span><span class="p">():</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;i like logs&#39;</span><span class="p">)</span>
+<span class="k">return</span> <span class="s1">&#39;Hello, World!&#39;</span>
 
 <span class="o">...</span>
 </pre></div>
@@ -298,6 +322,9 @@ something like the following:</p>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,137&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;division by zero&quot;</span><span class="p">}</span>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,138&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Exception has occured&quot;</span><span class="p">,</span> <span class="s2">&quot;exc_info&quot;</span><span class="p">:</span> <span class="s2">&quot;Traceback (most recent call last):</span><span class="se">\n</span><span class="s2">  File </span><span class="se">\&quot;</span><span class="s2">reconplogger/tests/test_formatter.py</span><span class="se">\&quot;</span><span class="s2">, line 31, in test_exception_with_trace</span><span class="se">\n</span><span class="s2">    b = 100 / 0</span><span class="se">\n</span><span class="s2">ZeroDivisionError: division by zero&quot;</span><span class="p">}</span>
 <span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-09-05 17:38:38,138&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;test_formatter.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">37</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello world&quot;</span><span class="p">,</span> <span class="s2">&quot;context check&quot;</span><span class="p">:</span> <span class="s2">&quot;check&quot;</span><span class="p">}</span>
+
+<span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2020-09-02 17:20:16,428&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;hello.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;i like logs&quot;</span><span class="p">,</span> <span class="s2">&quot;correlation_id&quot;</span><span class="p">:</span> <span class="s2">&quot;3958f378-5d48-4e1c-b83b-3c6d9f95faec&quot;</span><span class="p">}</span>
+<span class="p">{</span><span class="s2">&quot;asctime&quot;</span><span class="p">:</span> <span class="s2">&quot;2020-09-02 17:20:16,428&quot;</span><span class="p">,</span> <span class="s2">&quot;levelname&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;reconplogger.py&quot;</span><span class="p">,</span> <span class="s2">&quot;lineno&quot;</span><span class="p">:</span> <span class="mi">271</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Request is completed&quot;</span><span class="p">,</span> <span class="s2">&quot;http_endpoint&quot;</span><span class="p">:</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;http_method&quot;</span><span class="p">:</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;http_response_code&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;http_response_size&quot;</span><span class="p">:</span> <span class="mi">56</span><span class="p">,</span> <span class="s2">&quot;http_input_payload_size&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span> <span class="s2">&quot;http_input_payload_type&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span> <span class="s2">&quot;http_response_time&quot;</span><span class="p">:</span> <span class="s2">&quot;0.0002014636993408203&quot;</span><span class="p">,</span> <span class="s2">&quot;correlation_id&quot;</span><span class="p">:</span> <span class="s2">&quot;3958f378-5d48-4e1c-b83b-3c6d9f95faec&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -512,11 +539,19 @@ file, test it and if successful, push the package to pypi.</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2018-present, omni:us
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -527,7 +562,6 @@ file, test it and if successful, push the package to pypi.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

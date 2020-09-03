@@ -1,38 +1,39 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; reconplogger 4.2.0 documentation</title>
+  <title>API Reference &mdash; reconplogger 4.3.1 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="reconplogger - omni:us python logger" href="index.html" /> 
@@ -49,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> reconplogger
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> reconplogger
           
 
           
@@ -59,7 +60,7 @@
             
             
               <div class="version">
-                4.2.0
+                4.3.1
               </div>
             
           
@@ -76,6 +77,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -93,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -131,7 +134,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>API Reference</li>
     
@@ -186,9 +189,9 @@
 </tr>
 </tbody>
 </table>
-<dl class="function">
+<dl class="py function">
 <dt id="reconplogger.add_file_handler">
-<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">add_file_handler</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">file_path</em>, <em class="sig-param">format='%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'</em>, <em class="sig-param">level='DEBUG'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#add_file_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">add_file_handler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">logger</span></em>, <em class="sig-param"><span class="n">file_path</span></em>, <em class="sig-param"><span class="n">format</span><span class="o">=</span><span class="default_value">'%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'</span></em>, <em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">'DEBUG'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#add_file_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.add_file_handler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a file handler to a given logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -202,9 +205,9 @@
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="reconplogger.flask_app_logger_setup">
-<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">flask_app_logger_setup</code><span class="sig-paren">(</span><em class="sig-param">flask_app</em>, <em class="sig-param">logger_name='plain_logger'</em>, <em class="sig-param">config=None</em>, <em class="sig-param">level=None</em>, <em class="sig-param">env_prefix='LOGGER'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#flask_app_logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.flask_app_logger_setup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">flask_app_logger_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">flask_app</span></em>, <em class="sig-param"><span class="n">logger_name</span><span class="o">=</span><span class="default_value">'plain_logger'</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">env_prefix</span><span class="o">=</span><span class="default_value">'LOGGER'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#flask_app_logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.flask_app_logger_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets up logging configuration, configures flask to use it, and returns the logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -225,9 +228,9 @@
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="reconplogger.get_logger">
-<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">get_logger</code><span class="sig-paren">(</span><em class="sig-param">logger_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#get_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.get_logger" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">get_logger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">logger_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#get_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.get_logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an already existing logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -245,9 +248,9 @@
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="reconplogger.load_config">
-<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param">cfg=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.load_config" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.load_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a logging configuration from path or environment variable or dictionary object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -259,9 +262,9 @@
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="reconplogger.logger_setup">
-<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">logger_setup</code><span class="sig-paren">(</span><em class="sig-param">logger_name='plain_logger'</em>, <em class="sig-param">config=None</em>, <em class="sig-param">level=None</em>, <em class="sig-param">env_prefix='LOGGER'</em>, <em class="sig-param">init_messages=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.logger_setup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">logger_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">logger_name</span><span class="o">=</span><span class="default_value">'plain_logger'</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">env_prefix</span><span class="o">=</span><span class="default_value">'LOGGER'</span></em>, <em class="sig-param"><span class="n">init_messages</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#logger_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.logger_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets up logging configuration and returns the logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -282,9 +285,9 @@
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="reconplogger.replace_logger_handlers">
-<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">replace_logger_handlers</code><span class="sig-paren">(</span><em class="sig-param">logger</em>, <em class="sig-param">handlers='plain_logger'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#replace_logger_handlers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.replace_logger_handlers" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">replace_logger_handlers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">logger</span></em>, <em class="sig-param"><span class="n">handlers</span><span class="o">=</span><span class="default_value">'plain_logger'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#replace_logger_handlers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.replace_logger_handlers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replaces the handlers of a given logger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -296,9 +299,9 @@
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="reconplogger.test_logger">
-<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">test_logger</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#test_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.test_logger" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">test_logger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#test_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.test_logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logs one message to each debug, info and warning levels intended for testing.</p>
 </dd></dl>
 
@@ -323,11 +326,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2018-present, omni:us
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -338,7 +349,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

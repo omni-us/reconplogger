@@ -1,38 +1,39 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>reconplogger &mdash; reconplogger 4.2.0 documentation</title>
+  <title>reconplogger &mdash; reconplogger 4.3.1 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
 </head>
@@ -48,7 +49,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> reconplogger
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> reconplogger
           
 
           
@@ -58,7 +59,7 @@
             
             
               <div class="version">
-                4.2.0
+                4.3.1
               </div>
             
           
@@ -75,6 +76,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -89,6 +91,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -127,7 +130,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">Module code</a> &raquo;</li>
         
@@ -153,10 +156,28 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">logging.config</span>
 <span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">CRITICAL</span><span class="p">,</span> <span class="n">ERROR</span><span class="p">,</span> <span class="n">WARNING</span><span class="p">,</span> <span class="n">INFO</span><span class="p">,</span> <span class="n">DEBUG</span><span class="p">,</span> <span class="n">NOTSET</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
 
 
-<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;4.2.0&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;4.3.1&#39;</span>
 
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># If flask is installed import the request context objects</span>
+    <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">has_request_context</span>
+    <span class="c1"># If requests is installed patch the calls to add the correlation id</span>
+    <span class="kn">import</span> <span class="nn">requests</span>
+    <span class="k">def</span> <span class="nf">_request_patch</span><span class="p">(</span><span class="n">slf</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="n">has_request_context</span><span class="p">():</span>
+            <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Correlation-ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">correlation_id</span>
+        <span class="k">return</span> <span class="n">slf</span><span class="o">.</span><span class="n">request_orig</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">Session</span><span class="p">,</span> <span class="s1">&#39;request_orig&#39;</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">request</span><span class="p">)</span>
+    <span class="n">requests</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">request</span> <span class="o">=</span> <span class="n">_request_patch</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
 
 <span class="n">reconplogger_format</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="se">\t</span><span class="si">%(levelname)s</span><span class="s1"> -- </span><span class="si">%(filename)s</span><span class="s1">:</span><span class="si">%(lineno)s</span><span class="s1"> -- </span><span class="si">%(message)s</span><span class="s1">&#39;</span>
 
@@ -388,11 +409,41 @@
     <span class="c1"># Configure logging and get logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logger_setup</span><span class="p">(</span><span class="n">logger_name</span><span class="o">=</span><span class="n">logger_name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span> <span class="n">env_prefix</span><span class="o">=</span><span class="n">env_prefix</span><span class="p">)</span>
 
+    <span class="c1"># Add flask before and after request functions to augment the logs</span>
+    <span class="k">def</span> <span class="nf">_flask_logging_before_request</span><span class="p">():</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">correlation_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Correlation-ID&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()))</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">flask_app</span><span class="o">.</span><span class="n">before_request_funcs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_flask_logging_before_request</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_flask_logging_after_request</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;Correlation-ID&quot;</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">correlation_id</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Request is completed&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;http_endpoint&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="s2">&quot;http_method&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+            <span class="s2">&quot;http_response_code&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+            <span class="s2">&quot;http_response_size&quot;</span><span class="p">:</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">response</span><span class="p">),</span>
+            <span class="s2">&quot;http_input_payload_size&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">content_length</span><span class="p">,</span>
+            <span class="s2">&quot;http_input_payload_type&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span>
+            <span class="s2">&quot;http_response_time&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">g</span><span class="o">.</span><span class="n">start_time</span><span class="p">),</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="n">response</span>
+    <span class="n">flask_app</span><span class="o">.</span><span class="n">after_request_funcs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_flask_logging_after_request</span><span class="p">)</span>
+
+    <span class="c1"># Add logging filter to augment the logs</span>
+    <span class="k">class</span> <span class="nc">FlaskLoggingFilter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Filter</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">has_request_context</span><span class="p">():</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">correlation_id</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">correlation_id</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addFilter</span><span class="p">(</span><span class="n">FlaskLoggingFilter</span><span class="p">())</span>
+
     <span class="c1"># Replace flask logger</span>
     <span class="n">flask_app</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
 
-    <span class="c1"># Replace werkzeug logger handlers</span>
-    <span class="n">replace_logger_handlers</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;werkzeug&#39;</span><span class="p">),</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="c1"># Setup werkzeug logger</span>
+    <span class="n">werkzeug_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;werkzeug&#39;</span><span class="p">)</span>
+    <span class="n">replace_logger_handlers</span><span class="p">(</span><span class="n">werkzeug_logger</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">werkzeug_logger</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">WARNING</span>
 
     <span class="k">return</span> <span class="n">logger</span></div>
 </pre></div>
@@ -407,11 +458,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2018-present, omni:us
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -422,7 +481,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
