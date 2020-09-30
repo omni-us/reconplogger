@@ -175,7 +175,9 @@ The usage would be as follows:
     @app.route('/')
     def hello_world():
         logger.info('i like logs')
-    return 'Hello, World!'
+        correlation_id = reconplogger.get_correlation_id()
+        logger.info('correlation id for this request: '+correlation_id)
+        return 'Hello, World!'
 
     ...
 
