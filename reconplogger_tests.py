@@ -143,8 +143,6 @@ class TestReconplogger(unittest.TestCase):
         os.environ['RECONPLOGGER_CFG'] = 'reconplogger_default_cfg'
         os.environ['RECONPLOGGER_NAME'] = 'json_logger'
         app = Flask(__name__)
-        reconplogger.flask_app_logger_setup(
-            env_prefix=env_prefix, flask_app=app)
         flask_msg = 'flask message with correlation id'
 
         @app.route('/')
@@ -152,7 +150,16 @@ class TestReconplogger(unittest.TestCase):
             app.logger.info(flask_msg)  # pylint: disable=no-member
             correlation_id = reconplogger.get_correlation_id()
             return 'correlation_id='+correlation_id
+
         client = app.test_client()
+        response = client.get("/")
+        self.assertEqual(response.status_code, 500)
+
+        reconplogger.flask_app_logger_setup(
+            env_prefix=env_prefix, flask_app=app)
+        client = app.test_client()
+
+        self.assertRaises(RuntimeError, lambda: reconplogger.get_correlation_id())
 
         # Check correlation id propagation
         with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
