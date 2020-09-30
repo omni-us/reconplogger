@@ -150,13 +150,15 @@ class TestReconplogger(unittest.TestCase):
         @app.route('/')
         def hello_world():
             app.logger.info(flask_msg)  # pylint: disable=no-member
-            return 'Hello, World!'
+            correlation_id = reconplogger.get_correlation_id()
+            return 'correlation_id='+correlation_id
         client = app.test_client()
 
         # Check correlation id propagation
         with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
             correlation_id = str(uuid.uuid4())
-            client.get("/", headers={'Correlation-ID': correlation_id})
+            response = client.get("/", headers={'Correlation-ID': correlation_id})
+            self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)
             logs.check(
                 ('json_logger', 'INFO', flask_msg, correlation_id),
                 ('json_logger', 'INFO', "Request is completed", correlation_id),
