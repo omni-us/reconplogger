@@ -294,3 +294,16 @@ def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, l
     werkzeug_logger.level = WARNING
 
     return logger
+
+
+def get_correlation_id():
+    """Returns the current correlation id.
+
+    Raises:
+        ImportError: When flask package not available.
+        RuntimeError: When flask.g does not have a correlation_id attribute.
+    """
+    from flask import g
+    if not hasattr(g, 'correlation_id'):
+        raise RuntimeError('correlation_id not found in flask.g')
+    return g.correlation_id
