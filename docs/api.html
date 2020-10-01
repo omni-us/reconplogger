@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; reconplogger 4.3.1 documentation</title>
+  <title>API Reference &mdash; reconplogger 4.4.0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                4.3.1
+                4.4.0
               </div>
             
           
@@ -172,19 +172,22 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.flask_app_logger_setup" title="reconplogger.flask_app_logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flask_app_logger_setup</span></code></a>(flask_app[, …])</p></td>
 <td><p>Sets up logging configuration, configures flask to use it, and returns the logger.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.get_logger" title="reconplogger.get_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_logger</span></code></a>(logger_name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.get_correlation_id" title="reconplogger.get_correlation_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_correlation_id</span></code></a>()</p></td>
+<td><p>Returns the current correlation id.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.get_logger" title="reconplogger.get_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_logger</span></code></a>(logger_name)</p></td>
 <td><p>Returns an already existing logger.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.load_config" title="reconplogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.load_config" title="reconplogger.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>([cfg])</p></td>
 <td><p>Loads a logging configuration from path or environment variable or dictionary object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.logger_setup" title="reconplogger.logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger_setup</span></code></a>([logger_name, config, level, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.logger_setup" title="reconplogger.logger_setup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger_setup</span></code></a>([logger_name, config, level, …])</p></td>
 <td><p>Sets up logging configuration and returns the logger.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.replace_logger_handlers" title="reconplogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.replace_logger_handlers" title="reconplogger.replace_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_logger_handlers</span></code></a>(logger[, handlers])</p></td>
 <td><p>Replaces the handlers of a given logger.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#reconplogger.test_logger" title="reconplogger.test_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_logger</span></code></a>(logger)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#reconplogger.test_logger" title="reconplogger.test_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_logger</span></code></a>(logger)</p></td>
 <td><p>Logs one message to each debug, info and warning levels intended for testing.</p></td>
 </tr>
 </tbody>
@@ -224,6 +227,20 @@
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.8)">logging.Logger</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="reconplogger.get_correlation_id">
+<code class="sig-prename descclassname">reconplogger.</code><code class="sig-name descname">get_correlation_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/reconplogger.html#get_correlation_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reconplogger.get_correlation_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current correlation id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ImportError" title="(in Python v3.8)"><strong>ImportError</strong></a> – When flask package not available.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.8)"><strong>RuntimeError</strong></a> – When run outside an application context or if flask app has not been setup.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
