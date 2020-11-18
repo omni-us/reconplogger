@@ -311,3 +311,18 @@ def get_correlation_id():
     if not has_correlation_id:
         raise RuntimeError('correlation_id not found in flask.g, probably flask app not yet setup.')
     return g.correlation_id
+
+
+def set_correlation_id(correlation_id):
+    """Sets the correlation id for the current application context.
+
+    Raises:
+        ImportError: When flask package not available.
+        RuntimeError: When run outside an application context or if flask app has not been setup.
+    """
+    from flask import g
+    try:
+        has_correlation_id = hasattr(g, 'correlation_id')
+    except RuntimeError:
+        raise RuntimeError('set_correlation_id only intended to be used inside an application context.')
+    g.correlation_id = str(correlation_id)
