@@ -322,7 +322,7 @@ def set_correlation_id(correlation_id):
     """
     from flask import g
     try:
-        has_correlation_id = hasattr(g, 'correlation_id')
+        hasattr(g, 'correlation_id')
     except RuntimeError:
         raise RuntimeError('set_correlation_id only intended to be used inside an application context.')
     g.correlation_id = str(correlation_id)
