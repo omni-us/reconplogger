@@ -181,6 +181,20 @@ The usage would be as follows:
 
     ...
 
+As illustrated in the previous example the :func:`get_correlation_id` function
+can be used to get the correlation id for the current application context.
+However, there are cases in which it is desired to set the correlation id,
+instead of getting a randomly generated one. In this case the
+:func:`get_correlation_id` function is used, for example as follows:
+
+.. code-block:: python
+
+    @app.route('/')
+    def hello_world():
+        reconplogger.set_correlation_id('my_correlation_id')
+        logger.info('i like logs')
+        return 'Hello, World!'
+
 An important note is that after configuring the logger, the code should not
 modify the logger configuration. For example, the logging level should not be
 modified. Adding an additional handler to the logger is not a problem. This
@@ -368,7 +382,7 @@ After changing the code, always run unit tests as follows:
 
 .. code-block:: bash
 
-    ./setup.py test
+    ./setup.py test_coverage
 
 
 Pull requests

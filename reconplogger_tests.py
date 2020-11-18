@@ -9,7 +9,7 @@ import logging
 import uuid
 import reconplogger
 from testfixtures import LogCapture, compare, Comparison
-from flask import Flask
+from flask import Flask, request
 import requests
 
 
@@ -147,8 +147,12 @@ class TestReconplogger(unittest.TestCase):
 
         @app.route('/')
         def hello_world():
+            if request.args.get('id') is None:
+                correlation_id = reconplogger.get_correlation_id()
+            else:
+                correlation_id = request.args.get('id')
+                reconplogger.set_correlation_id(correlation_id)
             app.logger.info(flask_msg)  # pylint: disable=no-member
-            correlation_id = reconplogger.get_correlation_id()
             return 'correlation_id='+correlation_id
 
         client = app.test_client()
@@ -160,6 +164,7 @@ class TestReconplogger(unittest.TestCase):
         client = app.test_client()
 
         self.assertRaises(RuntimeError, lambda: reconplogger.get_correlation_id())
+        self.assertRaises(RuntimeError, lambda: reconplogger.set_correlation_id('id'))
 
         # Check correlation id propagation
         with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
@@ -175,6 +180,15 @@ class TestReconplogger(unittest.TestCase):
             client.get("/")
             correlation_id = logs.actual()[0][3]
             uuid.UUID(correlation_id)
+            logs.check(
+                ('json_logger', 'INFO', flask_msg, correlation_id),
+                ('json_logger', 'INFO', "Request is completed", correlation_id),
+            )
+        # Check set correlation id
+        with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
+            correlation_id = str(uuid.uuid4())
+            response = client.get("/?id="+correlation_id)
+            self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)
             logs.check(
                 ('json_logger', 'INFO', flask_msg, correlation_id),
                 ('json_logger', 'INFO', "Request is completed", correlation_id),
