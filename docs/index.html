@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>reconplogger - omni:us python logger &mdash; reconplogger 4.4.0 documentation</title>
+  <title>reconplogger - omni:us python logger &mdash; reconplogger 4.5.0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                4.4.0
+                4.5.0
               </div>
             
           
@@ -295,7 +295,7 @@ if the correlation id its not present in the request headers it will be generate
 <span class="o">...</span>
 
 <span class="c1">## User logger in a flask request</span>
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">hello_world</span><span class="p">():</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;i like logs&#39;</span><span class="p">)</span>
     <span class="n">correlation_id</span> <span class="o">=</span> <span class="n">reconplogger</span><span class="o">.</span><span class="n">get_correlation_id</span><span class="p">()</span>
@@ -305,15 +305,27 @@ if the correlation id its not present in the request headers it will be generate
 <span class="o">...</span>
 </pre></div>
 </div>
+<p>As illustrated in the previous example the <code class="xref py py-func docutils literal notranslate"><span class="pre">get_correlation_id()</span></code> function
+can be used to get the correlation id for the current application context.
+However, there are cases in which it is desired to set the correlation id,
+instead of getting a randomly generated one. In this case the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">get_correlation_id()</span></code> function is used, for example as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hello_world</span><span class="p">():</span>
+    <span class="n">reconplogger</span><span class="o">.</span><span class="n">set_correlation_id</span><span class="p">(</span><span class="s1">&#39;my_correlation_id&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;i like logs&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;Hello, World!&#39;</span>
+</pre></div>
+</div>
 <p>An important note is that after configuring the logger, the code should not
 modify the logger configuration. For example, the logging level should not be
 modified. Adding an additional handler to the logger is not a problem. This
 could be desired for example to additionally log to a file.</p>
 <p>In the helm <cite>values.yaml</cite> file of the microservice, the default values for the
 environment variables should be set as:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">LOGGER_CFG</span><span class="p">:</span>
-<span class="nt">LOGGER_NAME</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">json_logger</span>
-<span class="nt">LOGGER_LEVEL</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">LOGGER_CFG</span><span class="p p-Indicator">:</span>
+<span class="l l-Scalar l-Scalar-Plain">LOGGER_NAME</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">json_logger</span>
+<span class="l l-Scalar l-Scalar-Plain">LOGGER_LEVEL</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
 </pre></div>
 </div>
 <p>With the <code class="code docutils literal notranslate"><span class="pre">json_logger</span></code> logger, the format of the logs should look
@@ -465,7 +477,7 @@ virtualenv -p python3 venv
 </pre></div>
 </div>
 <p>After changing the code, always run unit tests as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./setup.py <span class="nb">test</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./setup.py test_coverage
 </pre></div>
 </div>
 <div class="section" id="pull-requests">
@@ -509,7 +521,7 @@ file, test it and if successful, push the package to pypi.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#reconplogger-module">reconplogger module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-reconplogger">reconplogger module</a></li>
 </ul>
 </li>
 </ul>

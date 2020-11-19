@@ -2,7 +2,7 @@ API Reference
 =============
 
 reconplogger module
---------------
+-------------------
 
 .. automodule:: reconplogger
     :members:
