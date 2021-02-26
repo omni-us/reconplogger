@@ -58,8 +58,6 @@ jobs:
       - run:
           name: Code coverage
           command: |
-            mv coverage_py3.8.xml coverage.xml
-            rm -f coverage_*.xml
             for py in 3.5 3.6 3.7 3.8 3.9; do
               bash <(curl -s https://codecov.io/bash) \
                 -t $CODECOV_TOKEN_RECONPLOGGER \
