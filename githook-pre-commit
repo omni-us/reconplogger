@@ -26,6 +26,7 @@ fi
 ## Check files that changed ##
 FILES=( $(git status --porcelain | sed -r 's|^ |_|; s|^(.) |\1_|; s|^(R[_M]) .* ->|\1|;' | grep -E '^([MRA]|.M)') );
 PYLINT=$(which pylint pylint3 | head -n 1);
+PYLINT+=" --errors-only --disable=no-member";
 
 check_change_after_staged () {
   [ "${2:1:1}" = "M" ] &&
@@ -38,8 +39,8 @@ while [ "$n" -lt "${#FILES[@]}" ]; do
   check_change_after_staged "${FILES[$n]}" "${FILES[$((n-1))]}";
   case "${FILES[$n]}" in
     *.py )
-      echo "${0##*/}: $PYLINT --errors-only ${FILES[$n]}" 1>&2;
-      $PYLINT --errors-only "${FILES[$n]}";
+      echo "${0##*/}: $PYLINT ${FILES[$n]}" 1>&2;
+      $PYLINT "${FILES[$n]}";
       ;;
     .circleci/config.yml )
       echo "${0##*/}: circleci config validate -c .circleci/config.yml" 1>&2;
@@ -51,26 +52,13 @@ done
 
 
 ## Run unit tests ##
-./setup.py test;
+./setup.py test_coverage;
 [ "$?" != "0" ] && exit 1;
 
-
-## If bumping version, check wheel ok for pypi ##
-if [ -n ${BUMPVERSION_NEW_VERSION+x} ]; then
+## Only when bumping version ##
+if [ "${BUMPVERSION_NEW_VERSION+x}" != "" ]; then
   ./setup.py bdist_wheel;
   twine check dist/*.whl;
-  [ "$?" != "0" ] && exit 1;
-fi
-
-
-## Update documentation ##
-if [ "${BUMPVERSION_NEW_VERSION+x}" != "" ]; then
-  ./setup.py build_sphinx --quiet --builder html \
-      --version $BUMPVERSION_NEW_VERSION --release $BUMPVERSION_NEW_VERSION &&
-    rm -fr docs &&
-    mv sphinx/_build/html docs &&
-    touch docs/.nojekyll &&
-    git add docs;
   [ "$?" != "0" ] && exit 1;
 fi
 

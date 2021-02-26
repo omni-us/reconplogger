@@ -64,6 +64,27 @@ class TestReconplogger(unittest.TestCase):
             logger.info(info_msg)
             log.check(('json_logger', 'INFO', info_msg))
 
+    def test_replace_logger_handlers(self):
+        logger = logging.getLogger('test_replace_logger_handlers')
+        handlers1 = reconplogger.logger_setup(logger_name='plain_logger').handlers
+        handlers2 = reconplogger.logger_setup(logger_name='json_logger').handlers
+
+        self.assertNotEqual(logger.handlers, handlers1)
+        self.assertNotEqual(logger.handlers, handlers2)
+
+        reconplogger.replace_logger_handlers('test_replace_logger_handlers', 'plain_logger')
+        self.assertEqual(logger.handlers, handlers1)
+        self.assertNotEqual(logger.handlers, handlers2)
+
+        reconplogger.replace_logger_handlers('test_replace_logger_handlers', 'json_logger')
+        self.assertEqual(logger.handlers, handlers2)
+        self.assertNotEqual(logger.handlers, handlers1)
+
+        self.assertRaises(
+            ValueError, lambda: reconplogger.replace_logger_handlers(logger, False))
+        self.assertRaises(
+            ValueError, lambda: reconplogger.replace_logger_handlers(False, False))
+
     def test_init_messages(self):
         logger = reconplogger.logger_setup(init_messages=True)
         with self.assertLogs(level='WARNING') as log:
@@ -114,6 +135,12 @@ class TestReconplogger(unittest.TestCase):
         self.assertRaises(
             ValueError, lambda: reconplogger.logger_setup('undefined_logger'))
 
+    def test_logger_setup_invalid_level(self):
+        self.assertRaises(
+            ValueError, lambda: reconplogger.logger_setup(level='INVALID'))
+        self.assertRaises(
+            ValueError, lambda: reconplogger.logger_setup(level=True))
+
     def test_flask_app_logger_setup(self):
         """Test flask app logger setup with json logger."""
         env_prefix = 'RECONPLOGGER'
@@ -131,7 +158,7 @@ class TestReconplogger(unittest.TestCase):
             app.logger.warning(flask_msg)  # pylint: disable=no-member
             logging.getLogger('werkzeug').warning(werkzeug_msg)
             log.check_present(
-                ('json_logger', 'WARNING', flask_msg),
+                (app.logger.name, 'WARNING', flask_msg),
                 ('werkzeug', 'WARNING', werkzeug_msg),
             )
         del os.environ['RECONPLOGGER_CFG']
@@ -156,7 +183,9 @@ class TestReconplogger(unittest.TestCase):
             return 'correlation_id='+correlation_id
 
         client = app.test_client()
-        response = client.get("/")
+        with LogCapture(attributes=('name', 'levelname')) as logs:
+            response = client.get("/")
+            logs.check((app.logger.name, 'ERROR'))
         self.assertEqual(response.status_code, 500)
 
         reconplogger.flask_app_logger_setup(
@@ -167,31 +196,31 @@ class TestReconplogger(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda: reconplogger.set_correlation_id('id'))
 
         # Check correlation id propagation
-        with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
+        with LogCapture(attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
             correlation_id = str(uuid.uuid4())
             response = client.get("/", headers={'Correlation-ID': correlation_id})
             self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)
             logs.check(
-                ('json_logger', 'INFO', flask_msg, correlation_id),
-                ('json_logger', 'INFO', "Request is completed", correlation_id),
+                (app.logger.name, 'INFO', flask_msg, correlation_id),
+                (app.logger.name, 'INFO', "Request is completed", correlation_id),
             )
         # Check correlation id creation
-        with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
+        with LogCapture(attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
             client.get("/")
             correlation_id = logs.actual()[0][3]
             uuid.UUID(correlation_id)
             logs.check(
-                ('json_logger', 'INFO', flask_msg, correlation_id),
-                ('json_logger', 'INFO', "Request is completed", correlation_id),
+                (app.logger.name, 'INFO', flask_msg, correlation_id),
+                (app.logger.name, 'INFO', "Request is completed", correlation_id),
             )
         # Check set correlation id
-        with LogCapture(attributes=('name', 'levelname', 'getMessage', "correlation_id")) as logs:
+        with LogCapture(attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
             correlation_id = str(uuid.uuid4())
             response = client.get("/?id="+correlation_id)
             self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)
             logs.check(
-                ('json_logger', 'INFO', flask_msg, correlation_id),
-                ('json_logger', 'INFO', "Request is completed", correlation_id),
+                (app.logger.name, 'INFO', flask_msg, correlation_id),
+                (app.logger.name, 'INFO', "Request is completed", correlation_id),
             )
 
         del os.environ['RECONPLOGGER_CFG']
@@ -234,6 +263,9 @@ class TestReconplogger(unittest.TestCase):
         logger.handlers[1].close()
         self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
         self.assertFalse(any([debug_msg in line for line in open(log_file).readlines()]))
+
+        self.assertRaises(
+            ValueError, lambda: reconplogger.add_file_handler(logger, file_path=log_file, level='INVALID'))
 
         shutil.rmtree(tmpdir)
 

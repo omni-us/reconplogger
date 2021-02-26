@@ -8,10 +8,12 @@ jobs:
       - checkout
       - run:
           name: Build wheel package
-          command: ./setup.py bdist_wheel
+          command: ./setup.py bdist_wheel sdist
       - persist_to_workspace:
           root: .
-          paths: ./dist/*.whl
+          paths:
+            - ./dist/*.whl
+            - ./dist/*.tar.gz
   test-py38: &test-py38
     docker:
       - image: circleci/python:3.8
@@ -22,13 +24,18 @@ jobs:
           name: Run unit tests
           command: |
             py=$(python3 --version | sed -r 's|.* 3\.([0-9]+)\..*|3.\1|')
-            pip3 install --user $(ls ./dist/*.whl)[all,test]
-            python3 -m reconplogger_tests
+            virtualenv -p python3 venv$py
+            . venv$py/bin/activate
+            pip3 install $(ls ./dist/*.whl)[test]
             python3 -m reconplogger_tests coverage xml coverage_py$py.xml
       - persist_to_workspace:
           root: .
           paths:
             - ./coverage_*.xml
+  test-py39:
+    <<: *test-py38
+    docker:
+      - image: circleci/python:3.9
   test-py37:
     <<: *test-py38
     docker:
@@ -53,7 +60,12 @@ jobs:
           command: |
             mv coverage_py3.8.xml coverage.xml
             rm -f coverage_*.xml
-            bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN_RECONPLOGGER
+            for py in 3.5 3.6 3.7 3.8 3.9; do
+              bash <(curl -s https://codecov.io/bash) \
+                -t $CODECOV_TOKEN_RECONPLOGGER \
+                -F py$py \
+                -f coverage_py$py.xml
+            done
   publish-pypi:
     docker:
       - image: mauvilsa/docker-twine:1.11.0
@@ -62,7 +74,7 @@ jobs:
           at: .
       - run:
           name: Publish Release on PyPI
-          command: twine upload --username "${PYPI_USER}" --password "${PYPI_PASS}" ./dist/*.whl
+          command: twine upload --username "${PYPI_USER}" --password "${PYPI_PASS}" ./dist/*.whl ./dist/*.tar.gz
 
 workflows:
   version: 2
@@ -71,11 +83,13 @@ workflows:
       - build: &buildreq
           filters: &tagfilter
             tags:
-              only: /^v\d+\.\d+\.\d+$/
+              only: /^v\d+\.\d+\.\d+.*$/
       - test-py38: &testreq
           <<: *buildreq
           requires:
             - build
+      - test-py39:
+          <<: *testreq
       - test-py37:
           <<: *testreq
       - test-py36:
@@ -85,7 +99,11 @@ workflows:
       - codecov:
           <<: *testreq
           requires:
+            - test-py39
             - test-py38
+            - test-py37
+            - test-py36
+            - test-py35
       - publish-pypi:
           filters:
             branches:
@@ -93,8 +111,4 @@ workflows:
             <<: *tagfilter
           context: pypi-upload-context
           requires:
-            - test-py38
-            - test-py37
-            - test-py36
-            - test-py35
             - codecov

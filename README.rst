@@ -347,6 +347,28 @@ handlers. The procedure would be as follows:
     reconplogger.replace_logger_handlers('some_logger_name', logger)
 
 
+Known issues
+============
+
+If the logging package is used as a global logger, using the reconplogger logger
+will log twice. For example:
+
+.. code-block:: python
+
+    >>> import logging
+    >>> logging.error('one')
+    ERROR:root:one
+    >>> import reconplogger
+    >>> logger = reconplogger.logger_setup()
+    >>> logger.error('two')
+    2021-02-25 17:38:29,181 ERROR -- <stdin>:1 -- two
+    ERROR:plain_logger:two
+
+Currently there is no known solution for this. As a workaround to avoid the
+double logging, search in your source code all uses of the logging package as
+a global logger and change them to use reconplogger instead.
+
+
 Contributing
 ============
 
@@ -376,13 +398,18 @@ The crucial step is installing the requirements which would be done by running:
 
 .. code-block:: bash
 
-    pip3 install --editable .[dev,doc,test,all]
+    pip3 install --editable ".[dev]"
 
-After changing the code, always run unit tests as follows:
+Running the unit tests can be done either using using `tox
+<https://tox.readthedocs.io/en/stable/>`__ or the :code:`setup.py` script. The
+unit tests are also installed with the package, thus can be used to in a
+production system.
 
 .. code-block:: bash
 
-    ./setup.py test_coverage
+    tox  # Run tests using tox
+    ./setup.py test_coverage  # Run tests and generate coverage report
+    python3 -m reconplogger_tests  # Run tests for installed package
 
 
 Pull requests

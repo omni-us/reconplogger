@@ -117,18 +117,16 @@ def load_config(cfg=None):
 
     cfg_dict['disable_existing_loggers'] = False
     logging.config.dictConfig(cfg_dict)
-    # To prevent double logging if root logger is used
-    logging.root.handlers = [logging.NullHandler()]
 
     return logging
 
 
-def replace_logger_handlers(logger, handlers='plain_logger'):
+def replace_logger_handlers(logger, handlers):
     """Replaces the handlers of a given logger.
 
     Args:
         logger (logging.Logger or str): Object or name of logger to replace handlers.
-        handlers (list[logging.StreamHandler] or logging.Logger or str): List of handlers or object or name of logger from which to get handlers.
+        handlers (logging.Logger or str): Object or name of logger from which to get handlers.
     """
     # Resolve logger
     if isinstance(logger, str):
@@ -137,13 +135,9 @@ def replace_logger_handlers(logger, handlers='plain_logger'):
         raise ValueError('Expected logger to be logger name or Logger object.')
 
     # Resolve handlers
-    if isinstance(handlers, list):
-        if not all(isinstance(x, logging.StreamHandler) for x in handlers):
-            raise ValueError(
-                'Expected handlers list to include only StreamHandler objects.')
-    elif isinstance(handlers, str):
+    if isinstance(handlers, str):
         handlers = get_logger(handlers).handlers
-    elif isinstance(logger, logging.Logger):
+    elif isinstance(handlers, logging.Logger):
         handlers = handlers.handlers
     else:
         raise ValueError(
@@ -257,6 +251,10 @@ def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, l
     # Configure logging and get logger
     logger = logger_setup(logger_name=logger_name, config=config, level=level, env_prefix=env_prefix)
 
+    # Setup flask logger
+    replace_logger_handlers(flask_app.logger, logger)
+    flask_app.logger.setLevel(logger.level)
+
     # Add flask before and after request functions to augment the logs
     def _flask_logging_before_request():
         g.correlation_id = request.headers.get("Correlation-ID", str(uuid.uuid4()))
@@ -265,7 +263,7 @@ def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, l
 
     def _flask_logging_after_request(response):
         response.headers.set("Correlation-ID", g.correlation_id)
-        logger.info("Request is completed", extra={
+        flask_app.logger.info("Request is completed", extra={
             "http_endpoint": request.path,
             "http_method": request.method,
             "http_response_code": response.status_code,
@@ -283,10 +281,7 @@ def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, l
             if has_request_context():
                 record.correlation_id = g.correlation_id
             return True
-    logger.addFilter(FlaskLoggingFilter())
-
-    # Replace flask logger
-    flask_app.logger = logger
+    flask_app.logger.addFilter(FlaskLoggingFilter())
 
     # Setup werkzeug logger
     werkzeug_logger = logging.getLogger('werkzeug')
