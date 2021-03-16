@@ -269,6 +269,19 @@ class TestReconplogger(unittest.TestCase):
 
         shutil.rmtree(tmpdir)
 
+    def test_logger_property(self):
+        class MyClass(reconplogger.RLoggerProperty):
+            pass
+
+        myclass = MyClass()
+        myclass.rlogger = False
+        self.assertEqual(myclass.rlogger, reconplogger.null_logger)
+        myclass.rlogger = True
+        self.assertEqual(myclass.rlogger, reconplogger.logger_setup())
+        logger = logging.Logger('test_logger_property')
+        myclass.rlogger = logger
+        self.assertEqual(myclass.rlogger, logger)
+
 
 def run_tests():
     tests = unittest.defaultTestLoader.loadTestsFromTestCase(TestReconplogger)

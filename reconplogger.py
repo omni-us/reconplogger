@@ -4,6 +4,7 @@ import yaml
 import logging
 import logging.config
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+from typing import Optional, Union
 import uuid
 import sys
 import time
@@ -84,11 +85,11 @@ null_logger = logging.Logger('null')
 null_logger.addHandler(logging.NullHandler())
 
 
-def load_config(cfg=None):
+def load_config(cfg: Optional[Union[str, dict]] = None):
     """Loads a logging configuration from path or environment variable or dictionary object.
 
     Args:
-        cfg (str or dict or None): Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None/"reconplogger_default_cfg" to use default configuration.
+        cfg: Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None/"reconplogger_default_cfg" to use default configuration.
 
     Returns:
         The logging package object.
@@ -121,12 +122,15 @@ def load_config(cfg=None):
     return logging
 
 
-def replace_logger_handlers(logger, handlers):
+def replace_logger_handlers(
+    logger: Union[logging.Logger, str],
+    handlers: Union[logging.Logger, str],
+):
     """Replaces the handlers of a given logger.
 
     Args:
-        logger (logging.Logger or str): Object or name of logger to replace handlers.
-        handlers (logging.Logger or str): Object or name of logger from which to get handlers.
+        logger: Object or name of logger to replace handlers.
+        handlers: Object or name of logger from which to get handlers.
     """
     # Resolve logger
     if isinstance(logger, str):
@@ -147,14 +151,19 @@ def replace_logger_handlers(logger, handlers):
     logger.handlers = list(handlers)
 
 
-def add_file_handler(logger, file_path, format=reconplogger_format, level='DEBUG'):
+def add_file_handler(
+    logger: logging.Logger,
+    file_path: str,
+    format: str = reconplogger_format,
+    level: Optional[str] = 'DEBUG',
+):
     """Adds a file handler to a given logger.
 
     Args:
-        logger (logging.Logger): Logger object where to add the file handler.
-        file_path (str): Path to log file for handler.
-        format (str): Format for logging.
-        level (str or int or None): Logging level for the handler.
+        logger: Logger object where to add the file handler.
+        file_path: Path to log file for handler.
+        format: Format for logging.
+        level: Logging level for the handler.
     """
     fileHandler = logging.FileHandler(file_path)
     fileHandler.setFormatter(logging.Formatter(format))
@@ -165,21 +174,21 @@ def add_file_handler(logger, file_path, format=reconplogger_format, level='DEBUG
     logger.addHandler(fileHandler)
 
 
-def test_logger(logger):
+def test_logger(logger: logging.Logger):
     """Logs one message to each debug, info and warning levels intended for testing."""
     logger.debug('reconplogger test debug message.')
     logger.info('reconplogger test info message.')
     logger.warning('reconplogger test warning message.')
 
 
-def get_logger(logger_name):
+def get_logger(logger_name: str) -> logging.Logger:
     """Returns an already existing logger.
 
     Args:
-        logger_name (str):  Name of the logger to get.
+        logger_name:  Name of the logger to get.
 
     Returns:
-        logging.Logger: The logger object.
+        The logger object.
 
     Raises:
         ValueError: If the logger does not exist.
@@ -189,18 +198,24 @@ def get_logger(logger_name):
     return logging.getLogger(logger_name)
 
 
-def logger_setup(logger_name='plain_logger', config=None, level=None, env_prefix='LOGGER', init_messages=False):
+def logger_setup(
+    logger_name: str = 'plain_logger',
+    config: Optional[str] = None,
+    level: Optional[str] = None,
+    env_prefix: str = 'LOGGER',
+    init_messages: bool = False,
+) -> logging.Logger:
     """Sets up logging configuration and returns the logger.
 
     Args:
-        logger_name (str):  Name of the logger that needs to be used.
-        config (str or None): Configuration string or path to configuration file or configuration file via environment variable.
-        level (str or int or None): Optional logging level that overrides one in config.
-        env_prefix (str): Environment variable names prefix for overriding logger configuration.
-        init_messages (bool): Whether to log init and test messages.
+        logger_name:  Name of the logger that needs to be used.
+        config: Configuration string or path to configuration file or configuration file via environment variable.
+        level: Optional logging level that overrides one in config.
+        env_prefix: Environment variable names prefix for overriding logger configuration.
+        init_messages: Whether to log init and test messages.
 
     Returns:
-        logging.Logger: The logger object.
+        The logger object.
     """
     if not isinstance(env_prefix, str) or not env_prefix:
         raise ValueError('env_prefix is required to be a non-empty string.')
@@ -235,18 +250,24 @@ def logger_setup(logger_name='plain_logger', config=None, level=None, env_prefix
     return logger
 
 
-def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, level=None, env_prefix='LOGGER'):
+def flask_app_logger_setup(
+    flask_app,
+    logger_name: str = 'plain_logger',
+    config: Optional[str] = None,
+    level: Optional[str] = None,
+    env_prefix: str = 'LOGGER',
+) -> logging.Logger:
     """Sets up logging configuration, configures flask to use it, and returns the logger.
 
     Args:
         flask_app (flask.app.Flask): The flask app object.
-        logger_name (str):  Name of the logger that needs to be used.
-        config (str): Configuration string or path to configuration file or configuration file via environment variable.
-        level (str): Optional logging level that overrides one in config.
-        env_prefix (str): Environment variable names prefix for overriding logger configuration.
+        logger_name:  Name of the logger that needs to be used.
+        config: Configuration string or path to configuration file or configuration file via environment variable.
+        level: Optional logging level that overrides one in config.
+        env_prefix: Environment variable names prefix for overriding logger configuration.
 
     Returns:
-        logging.Logger: The logger object.
+        The logger object.
     """
     # Configure logging and get logger
     logger = logger_setup(logger_name=logger_name, config=config, level=level, env_prefix=env_prefix)
@@ -291,7 +312,7 @@ def flask_app_logger_setup(flask_app, logger_name='plain_logger', config=None, l
     return logger
 
 
-def get_correlation_id():
+def get_correlation_id() -> str:
     """Returns the current correlation id.
 
     Raises:
@@ -308,7 +329,7 @@ def get_correlation_id():
     return g.correlation_id
 
 
-def set_correlation_id(correlation_id):
+def set_correlation_id(correlation_id: str):
     """Sets the correlation id for the current application context.
 
     Raises:
@@ -321,3 +342,36 @@ def set_correlation_id(correlation_id):
     except RuntimeError:
         raise RuntimeError('set_correlation_id only intended to be used inside an application context.')
     g.correlation_id = str(correlation_id)
+
+
+class RLoggerProperty:
+    """Class designed to be inherited by other classes to add an rlogger property."""
+
+    def __init__(self):
+        """Initializer for LoggerProperty class."""
+        if not hasattr(self, '_rlogger'):
+            self.rlogger = None
+
+    @property
+    def rlogger(self):
+        """The logger property for the class.
+
+        :getter: Returns the current logger.
+        :setter: Sets the reconplogger logger if True or sets null_logger if False or sets the given logger.
+
+        Raises:
+            ValueError: If an invalid logger value is given.
+        """
+        return self._rlogger
+
+    @rlogger.setter
+    def rlogger(
+        self,
+        logger: Optional[Union[bool, logging.Logger]]
+    ):
+        if logger is None or (isinstance(logger, bool) and not logger):
+            self._rlogger = null_logger
+        elif isinstance(logger, bool) and logger:
+            self._rlogger = logger_setup()
+        else:
+            self._rlogger = logger

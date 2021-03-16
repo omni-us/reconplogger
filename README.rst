@@ -22,6 +22,7 @@ The package contains essentially three things:
 - A default logging configuration.
 - A function for loading logging configuration for regular python code.
 - A function for loading logging configuration for flask-based microservices.
+- An inheritable class to add a logger property.
 - Lower level functions for:
 
   - Loading logging configuration from any of: config file, environment variable, or default.
@@ -257,6 +258,27 @@ three lines of code, thus to simplify things reconplogger provides the
 of code. The use is quite straightforward as::
 
     reconplogger.add_file_handler(logger, '/path/to/log/file.log')
+
+
+Adding a logging property
+-------------------------
+
+When implementing classes it is common to add logging support to it. For this an
+inheritable class :class:`.RLoggerProperty` is included in reconplogger to add an
+:code:`rlogger` property to easily set and get the reconplogger logger. An
+example of use is the following:
+
+.. code-block:: python
+
+    from reconplogger import RLoggerProperty
+
+    class MyClass(RLoggerProperty):
+        def __init__(self, logger):
+            self.rlogger = logger
+        def my_method(self):
+            self.rlogger.error('my_method was called')
+
+    MyClass(logger=True).my_method()
 
 
 Overriding logging configuration
