@@ -19,7 +19,7 @@ class TestReconplogger(unittest.TestCase):
         reconplogger.load_config('reconplogger_default_cfg')
         logger = logging.getLogger('plain_logger')
         info_msg = 'info message'
-        with LogCapture() as log:
+        with LogCapture(names='plain_logger') as log:
             logger.info(info_msg)
             log.check(('plain_logger', 'INFO', info_msg))
 
@@ -40,7 +40,7 @@ class TestReconplogger(unittest.TestCase):
         logger = logging.getLogger('json_logger')
         error_msg = 'error message'
         exception = RuntimeError('Exception message')
-        with LogCapture() as log:
+        with LogCapture(names='json_logger') as log:
             try:
                 raise exception
             except Exception as e:
@@ -52,7 +52,7 @@ class TestReconplogger(unittest.TestCase):
         """Test logger_setup without specifying environment variable names."""
         logger = reconplogger.logger_setup()
         info_msg = 'info message'
-        with LogCapture() as log:
+        with LogCapture(names='plain_logger') as log:
             logger.info(info_msg)
             log.check(('plain_logger', 'INFO', info_msg))
 
@@ -60,7 +60,7 @@ class TestReconplogger(unittest.TestCase):
         """Test logger_setup without specifying environment variable names but changing logger name."""
         logger = reconplogger.logger_setup(logger_name='json_logger')
         info_msg = 'info message'
-        with LogCapture() as log:
+        with LogCapture(names='json_logger') as log:
             logger.info(info_msg)
             log.check(('json_logger', 'INFO', info_msg))
 
@@ -87,7 +87,7 @@ class TestReconplogger(unittest.TestCase):
 
     def test_init_messages(self):
         logger = reconplogger.logger_setup(init_messages=True)
-        with self.assertLogs(level='WARNING') as log:
+        with self.assertLogs(logger='plain_logger', level='WARNING') as log:
             reconplogger.test_logger(logger)
             self.assertTrue(any(['WARNING' in v and 'reconplogger' in v for v in log.output]))
 
@@ -118,7 +118,7 @@ class TestReconplogger(unittest.TestCase):
         }"""
         logger = reconplogger.logger_setup(env_prefix=env_prefix)
         info_msg = 'info message env logger'
-        with LogCapture() as log:
+        with LogCapture(names='example_logger') as log:
             logger.info(info_msg)
             log.check(('example_logger', 'INFO', info_msg))
 
@@ -154,7 +154,7 @@ class TestReconplogger(unittest.TestCase):
         assert app.after_request_funcs
         flask_msg = 'flask message'
         werkzeug_msg = 'werkzeug message'
-        with LogCapture() as log:
+        with LogCapture(names=(app.logger.name, 'werkzeug')) as log:
             app.logger.warning(flask_msg)  # pylint: disable=no-member
             logging.getLogger('werkzeug').warning(werkzeug_msg)
             log.check_present(
@@ -183,7 +183,7 @@ class TestReconplogger(unittest.TestCase):
             return 'correlation_id='+correlation_id
 
         client = app.test_client()
-        with LogCapture(attributes=('name', 'levelname')) as logs:
+        with LogCapture(names=app.logger.name, attributes=('name', 'levelname')) as logs:
             response = client.get("/")
             logs.check((app.logger.name, 'ERROR'))
         self.assertEqual(response.status_code, 500)
@@ -196,7 +196,7 @@ class TestReconplogger(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda: reconplogger.set_correlation_id('id'))
 
         # Check correlation id propagation
-        with LogCapture(attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
+        with LogCapture(names=app.logger.name, attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
             correlation_id = str(uuid.uuid4())
             response = client.get("/", headers={'Correlation-ID': correlation_id})
             self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)
@@ -205,7 +205,7 @@ class TestReconplogger(unittest.TestCase):
                 (app.logger.name, 'INFO', "Request is completed", correlation_id),
             )
         # Check correlation id creation
-        with LogCapture(attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
+        with LogCapture(names=app.logger.name, attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
             client.get("/")
             correlation_id = logs.actual()[0][3]
             uuid.UUID(correlation_id)
@@ -214,7 +214,7 @@ class TestReconplogger(unittest.TestCase):
                 (app.logger.name, 'INFO', "Request is completed", correlation_id),
             )
         # Check set correlation id
-        with LogCapture(attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
+        with LogCapture(names=app.logger.name, attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
             correlation_id = str(uuid.uuid4())
             response = client.get("/?id="+correlation_id)
             self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)

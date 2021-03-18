@@ -203,6 +203,7 @@ def logger_setup(
     config: Optional[str] = None,
     level: Optional[str] = None,
     env_prefix: str = 'LOGGER',
+    parent: Optional[logging.Logger] = None,
     init_messages: bool = False,
 ) -> logging.Logger:
     """Sets up logging configuration and returns the logger.
@@ -212,6 +213,7 @@ def logger_setup(
         config: Configuration string or path to configuration file or configuration file via environment variable.
         level: Optional logging level that overrides one in config.
         env_prefix: Environment variable names prefix for overriding logger configuration.
+        parent: Set for logging delegation to the parent.
         init_messages: Whether to log init and test messages.
 
     Returns:
@@ -228,6 +230,9 @@ def logger_setup(
 
     # Get logger
     logger = get_logger(os.getenv(env_name, logger_name))
+
+    # Override parent
+    logger.parent = parent
 
     # Override log level if set
     if env_level in os.environ:
@@ -256,6 +261,7 @@ def flask_app_logger_setup(
     config: Optional[str] = None,
     level: Optional[str] = None,
     env_prefix: str = 'LOGGER',
+    parent: Optional[logging.Logger] = None,
 ) -> logging.Logger:
     """Sets up logging configuration, configures flask to use it, and returns the logger.
 
@@ -265,12 +271,13 @@ def flask_app_logger_setup(
         config: Configuration string or path to configuration file or configuration file via environment variable.
         level: Optional logging level that overrides one in config.
         env_prefix: Environment variable names prefix for overriding logger configuration.
+        parent: Set for logging delegation to the parent.
 
     Returns:
         The logger object.
     """
     # Configure logging and get logger
-    logger = logger_setup(logger_name=logger_name, config=config, level=level, env_prefix=env_prefix)
+    logger = logger_setup(logger_name=logger_name, config=config, level=level, env_prefix=env_prefix, parent=parent)
 
     # Setup flask logger
     replace_logger_handlers(flask_app.logger, logger)
