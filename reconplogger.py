@@ -354,10 +354,11 @@ def set_correlation_id(correlation_id: str):
 class RLoggerProperty:
     """Class designed to be inherited by other classes to add an rlogger property."""
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Initializer for LoggerProperty class."""
+        super().__init__(*args, **kwargs)
         if not hasattr(self, '_rlogger'):
-            self.rlogger = None
+            self.rlogger = True
 
     @property
     def rlogger(self):
