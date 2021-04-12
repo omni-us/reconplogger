@@ -14,6 +14,10 @@ import requests
 
 
 class TestReconplogger(unittest.TestCase):
+
+    def setUp(self):
+        reconplogger.configs_loaded = set()
+
     def test_default_logger(self):
         """Test load config with the default config and plain logger."""
         reconplogger.load_config('reconplogger_default_cfg')
@@ -253,6 +257,7 @@ class TestReconplogger(unittest.TestCase):
         self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
         self.assertTrue(any([debug_msg in line for line in open(log_file).readlines()]))
 
+        reconplogger.configs_loaded = set()
         log_file = os.path.join(tmpdir, 'file2.log')
         logger = reconplogger.logger_setup(logger_name='plain_logger', level='DEBUG')
         reconplogger.add_file_handler(logger, file_path=log_file, level='ERROR')

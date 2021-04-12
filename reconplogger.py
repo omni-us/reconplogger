@@ -84,6 +84,8 @@ logging_levels.update({v: v for v in logging_levels})
 null_logger = logging.Logger('null')
 null_logger.addHandler(logging.NullHandler())
 
+configs_loaded = set()
+
 
 def load_config(cfg: Optional[Union[str, dict]] = None):
     """Loads a logging configuration from path or environment variable or dictionary object.
@@ -117,7 +119,11 @@ def load_config(cfg: Optional[Union[str, dict]] = None):
                 'Received string which is neither a path to an existing file nor the name of an set environment variable nor a python dictionary string that can be consumed by logging.config.dictConfig.')
 
     cfg_dict['disable_existing_loggers'] = False
-    logging.config.dictConfig(cfg_dict)
+
+    cfg_hash = yaml.safe_dump(cfg_dict).__hash__()
+    if cfg_hash not in configs_loaded:
+        logging.config.dictConfig(cfg_dict)
+        configs_loaded.add(cfg_hash)
 
     return logging
 
