@@ -87,7 +87,7 @@ null_logger.addHandler(logging.NullHandler())
 configs_loaded = set()
 
 
-def load_config(cfg: Optional[Union[str, dict]] = None):
+def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
     """Loads a logging configuration from path or environment variable or dictionary object.
 
     Args:
@@ -121,7 +121,7 @@ def load_config(cfg: Optional[Union[str, dict]] = None):
     cfg_dict['disable_existing_loggers'] = False
 
     cfg_hash = yaml.safe_dump(cfg_dict).__hash__()
-    if cfg_hash not in configs_loaded:
+    if reload or cfg_hash not in configs_loaded:
         logging.config.dictConfig(cfg_dict)
         configs_loaded.add(cfg_hash)
 
@@ -162,7 +162,7 @@ def add_file_handler(
     file_path: str,
     format: str = reconplogger_format,
     level: Optional[str] = 'DEBUG',
-):
+) -> logging.FileHandler:
     """Adds a file handler to a given logger.
 
     Args:
@@ -170,14 +170,18 @@ def add_file_handler(
         file_path: Path to log file for handler.
         format: Format for logging.
         level: Logging level for the handler.
+
+    Returns:
+        The handler object which could be used for removeHandler.
     """
-    fileHandler = logging.FileHandler(file_path)
-    fileHandler.setFormatter(logging.Formatter(format))
+    file_handler = logging.FileHandler(file_path)
+    file_handler.setFormatter(logging.Formatter(format))
     if level is not None:
         if level not in logging_levels:
             raise ValueError('Invalid logging level: "'+str(level)+'".')
-        fileHandler.setLevel(logging_levels[level])
-    logger.addHandler(fileHandler)
+        file_handler.setLevel(logging_levels[level])
+    logger.addHandler(file_handler)
+    return file_handler
 
 
 def test_logger(logger: logging.Logger):
@@ -209,6 +213,7 @@ def logger_setup(
     config: Optional[str] = None,
     level: Optional[str] = None,
     env_prefix: str = 'LOGGER',
+    reload: bool = False,
     parent: Optional[logging.Logger] = None,
     init_messages: bool = False,
 ) -> logging.Logger:
@@ -219,6 +224,7 @@ def logger_setup(
         config: Configuration string or path to configuration file or configuration file via environment variable.
         level: Optional logging level that overrides one in config.
         env_prefix: Environment variable names prefix for overriding logger configuration.
+        reload: Whether to reload logging configuration overriding any previous settings.
         parent: Set for logging delegation to the parent.
         init_messages: Whether to log init and test messages.
 
@@ -232,7 +238,7 @@ def logger_setup(
     env_level = env_prefix + '_LEVEL'
 
     # Configure logging
-    load_config(os.getenv(env_cfg, config))
+    load_config(os.getenv(env_cfg, config), reload=reload)
 
     # Get logger
     logger = get_logger(os.getenv(env_name, logger_name))

@@ -257,9 +257,8 @@ class TestReconplogger(unittest.TestCase):
         self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
         self.assertTrue(any([debug_msg in line for line in open(log_file).readlines()]))
 
-        reconplogger.configs_loaded = set()
         log_file = os.path.join(tmpdir, 'file2.log')
-        logger = reconplogger.logger_setup(logger_name='plain_logger', level='DEBUG')
+        logger = reconplogger.logger_setup(logger_name='plain_logger', level='DEBUG', reload=True)
         reconplogger.add_file_handler(logger, file_path=log_file, level='ERROR')
         self.assertEqual(logger.handlers[0].level, logging.DEBUG)
         self.assertEqual(logger.handlers[1].level, logging.ERROR)
