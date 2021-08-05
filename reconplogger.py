@@ -267,6 +267,9 @@ def logger_setup(
     return logger
 
 
+flask_request_completed_skip_endpoints = set()
+
+
 def flask_app_logger_setup(
     flask_app,
     logger_name: str = 'plain_logger',
@@ -303,15 +306,16 @@ def flask_app_logger_setup(
 
     def _flask_logging_after_request(response):
         response.headers.set("Correlation-ID", g.correlation_id)
-        flask_app.logger.info("Request is completed", extra={
-            "http_endpoint": request.path,
-            "http_method": request.method,
-            "http_response_code": response.status_code,
-            "http_response_size": sys.getsizeof(response),
-            "http_input_payload_size": request.content_length,
-            "http_input_payload_type": request.content_type,
-            "http_response_time": str(time.time() - g.start_time),
-        })
+        if request.path not in flask_request_completed_skip_endpoints:
+            flask_app.logger.info("Request is completed", extra={
+                "http_endpoint": request.path,
+                "http_method": request.method,
+                "http_response_code": response.status_code,
+                "http_response_size": sys.getsizeof(response),
+                "http_input_payload_size": request.content_length,
+                "http_input_payload_type": request.content_type,
+                "http_response_time": str(time.time() - g.start_time),
+            })
         return response
     flask_app.after_request_funcs.setdefault(None, []).append(_flask_logging_after_request)
 
