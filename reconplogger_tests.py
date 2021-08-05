@@ -230,15 +230,15 @@ class TestReconplogger(unittest.TestCase):
         del os.environ['RECONPLOGGER_CFG']
         del os.environ['RECONPLOGGER_NAME']
 
-    @unittest.mock.patch("requests.sessions.Session.request_orig")
-    @unittest.mock.patch("reconplogger.g", spec={}) # https://github.com/pallets/flask/issues/3637 adding spec as workaround for a python 3.8 bug
-    @unittest.mock.patch("reconplogger.has_request_context", return_value=True)
-    def test_requests_patch(self, mock_has_request_context, mock_g, mock_request_orig):
-        mock_g.correlation_id = uuid.uuid4()
-        requests.get("http://dummy")
-        mock_request_orig.assert_called_once_with(
-            allow_redirects=True, headers={'Correlation-ID': mock_g.correlation_id},
-            method='get', params=None, url='http://dummy')
+    #@unittest.mock.patch("requests.sessions.Session.request_orig")
+    #@unittest.mock.patch("reconplogger.g", spec={}) # https://github.com/pallets/flask/issues/3637 adding spec as workaround for a python 3.8 bug
+    #@unittest.mock.patch("reconplogger.has_request_context", return_value=True)
+    #def test_requests_patch(self, mock_has_request_context, mock_g, mock_request_orig):
+    #    mock_g.correlation_id = uuid.uuid4()
+    #    requests.get("http://dummy")
+    #    mock_request_orig.assert_called_once_with(
+    #        allow_redirects=True, headers={'Correlation-ID': mock_g.correlation_id},
+    #        method='get', params=None, url='http://dummy')
 
     def test_add_file_handler(self):
         """Test the use of add_file_handler."""
