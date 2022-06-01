@@ -1,0 +1,47 @@
+fail_fast: true
+
+repos:
+
+- repo: local
+  hooks:
+
+  - name: twine check [on bumpversion]
+    id: ./setup.py bdist_wheel && twine check dist/*.whl
+    entry: bash -c '
+      if [ "${BUMPVERSION_NEW_VERSION+x}" = "" ]; then
+        echo skipped;
+      else
+        ./setup.py bdist_wheel;
+        twine check dist/*.whl;
+      fi'
+    language: system
+    pass_filenames: false
+    verbose: true
+
+  - name: circleci config
+    id: circleci config validate -c .circleci/config.yml
+    entry: circleci config validate -c
+    language: system
+    files: .circleci/config.yml
+    verbose: true
+
+  - name: pylint
+    id: pylint --errors-only --disable=no-member
+    entry: pylint --errors-only --disable=no-member
+    language: system
+    types: [python]
+    verbose: true
+
+  - name: tox
+    id: tox --parallel
+    entry: tox --parallel
+    language: system
+    pass_filenames: false
+    verbose: true
+
+  - name: coverage
+    id: ./setup.py test_coverage
+    entry: ./setup.py test_coverage
+    language: system
+    pass_filenames: false
+    verbose: true

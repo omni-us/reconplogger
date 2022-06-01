@@ -32,6 +32,10 @@ jobs:
           root: .
           paths:
             - ./coverage_*.xml
+  test-py310:
+    <<: *test-py38
+    docker:
+      - image: circleci/python:3.10
   test-py39:
     <<: *test-py38
     docker:
@@ -44,10 +48,6 @@ jobs:
     <<: *test-py38
     docker:
       - image: circleci/python:3.6
-  test-py35:
-    <<: *test-py38
-    docker:
-      - image: circleci/python:3.5
   codecov:
     docker:
       - image: circleci/python:3.8
@@ -58,7 +58,7 @@ jobs:
       - run:
           name: Code coverage
           command: |
-            for py in 3.5 3.6 3.7 3.8 3.9; do
+            for py in 3.6 3.7 3.8 3.9 3.10; do
               bash <(curl -s https://codecov.io/bash) \
                 -t $CODECOV_TOKEN_RECONPLOGGER \
                 -F py$py \
@@ -86,22 +86,22 @@ workflows:
           <<: *buildreq
           requires:
             - build
+      - test-py310:
+          <<: *testreq
       - test-py39:
           <<: *testreq
       - test-py37:
           <<: *testreq
       - test-py36:
           <<: *testreq
-      - test-py35:
-          <<: *testreq
       - codecov:
           <<: *testreq
           requires:
+            - test-py310
             - test-py39
             - test-py38
             - test-py37
             - test-py36
-            - test-py35
       - publish-pypi:
           filters:
             branches:
