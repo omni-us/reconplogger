@@ -25,7 +25,7 @@ try:
         return slf.request_orig(*args, **kwargs, headers=headers)
     setattr(requests.sessions.Session, 'request_orig', requests.sessions.Session.request)
     requests.sessions.Session.request = _request_patch
-except:
+except ImportError:
     pass
 
 reconplogger_format = '%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
@@ -297,6 +297,7 @@ def flask_app_logger_setup(
     # Setup flask logger
     replace_logger_handlers(flask_app.logger, logger)
     flask_app.logger.setLevel(logger.level)
+    flask_app.logger.parent = logger.parent
 
     # Add flask before and after request functions to augment the logs
     def _flask_logging_before_request():
@@ -330,7 +331,8 @@ def flask_app_logger_setup(
     # Setup werkzeug logger
     werkzeug_logger = logging.getLogger('werkzeug')
     replace_logger_handlers(werkzeug_logger, logger)
-    werkzeug_logger.level = WARNING
+    werkzeug_logger.setLevel(logger.level)
+    werkzeug_logger.parent = logger.parent
 
     return logger
 

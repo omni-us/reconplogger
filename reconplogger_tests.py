@@ -7,9 +7,12 @@ import shutil
 import tempfile
 import logging
 import uuid
+import random
+import threading
 import reconplogger
 from testfixtures import LogCapture, compare, Comparison
 from flask import Flask, request
+from werkzeug.serving import make_server
 import requests
 
 
@@ -239,6 +242,29 @@ class TestReconplogger(unittest.TestCase):
     #    mock_request_orig.assert_called_once_with(
     #        allow_redirects=True, headers={'Correlation-ID': mock_g.correlation_id},
     #        method='get', params=None, url='http://dummy')
+    def test_requests_patch(self):
+        app = Flask(__name__)
+        reconplogger.flask_app_logger_setup(app)
+
+        @app.route("/id")
+        def get_id():
+            return reconplogger.get_correlation_id()
+
+        port = random.randint(5000, 10000)
+        server = make_server("localhost", port, app)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+
+        correlation_id = str(uuid.uuid4())
+        response = requests.get(f"http://localhost:{port}/id", headers={'Correlation-ID': correlation_id})
+        self.assertEqual(correlation_id, response.text)
+        self.assertEqual(correlation_id, response.headers['Correlation-ID'])
+
+        #with app.test_request_context():# as ctx:
+        #    correlation_id = str(uuid.uuid4())
+        #    response = requests.get(f"http://localhost:{port}/id", headers={'Correlation-ID': correlation_id})
+
+        server.shutdown()
 
     def test_add_file_handler(self):
         """Test the use of add_file_handler."""
@@ -293,31 +319,5 @@ def run_tests():
         sys.exit(True)
 
 
-def run_test_coverage():
-    try:
-        import coverage
-    except:
-        print('error: coverage package not found, run_test_coverage requires it.')
-        sys.exit(True)
-    cov = coverage.Coverage(source=['reconplogger'])
-    cov.start()
-    del sys.modules['reconplogger']
-    import reconplogger
-    run_tests()
-    cov.stop()
-    cov.save()
-    cov.report()
-    if 'xml' in sys.argv:
-        outfile = sys.argv[sys.argv.index('xml')+1]
-        cov.xml_report(outfile=outfile)
-        print('\nSaved coverage report to '+outfile+'.')
-    else:
-        cov.html_report(directory='htmlcov')
-        print('\nSaved html coverage report to htmlcov directory.')
-
-
 if __name__ == '__main__':
-    if 'coverage' in sys.argv:
-        run_test_coverage()
-    else:
-        run_tests()
+    run_tests()
