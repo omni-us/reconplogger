@@ -10,7 +10,7 @@ import sys
 import time
 
 
-__version__ = '4.10.1'
+__version__ = '4.11.0'
 
 
 try:
@@ -301,8 +301,8 @@ def flask_app_logger_setup(
 
     # Add flask before and after request functions to augment the logs
     def _flask_logging_before_request():
-        g.correlation_id = request.headers.get("Correlation-ID", str(uuid.uuid4()))
-        g.start_time = time.time()
+        g.correlation_id = request.headers.get("Correlation-ID", str(uuid.uuid4()))  # pylint: disable=assigning-non-slot
+        g.start_time = time.time()  # pylint: disable=assigning-non-slot
     flask_app.before_request_funcs.setdefault(None, []).append(_flask_logging_before_request)
 
     def _flask_logging_after_request(response):
@@ -366,7 +366,7 @@ def set_correlation_id(correlation_id: str):
         hasattr(g, 'correlation_id')
     except RuntimeError:
         raise RuntimeError('set_correlation_id only intended to be used inside an application context.')
-    g.correlation_id = str(correlation_id)
+    g.correlation_id = str(correlation_id)  # pylint: disable=assigning-non-slot
 
 
 class RLoggerProperty:
