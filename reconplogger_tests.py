@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-import unittest
-import shutil
-import tempfile
 import logging
-import uuid
-import random
-import threading
+import os
 import reconplogger
+import random
+import shutil
+import sys
+import tempfile
+import threading
+import unittest
+import uuid
 from testfixtures import LogCapture, compare, Comparison
-from flask import Flask, request
-from werkzeug.serving import make_server
-import requests
+
+try:
+    from flask import Flask, request
+except ImportError:
+    Flask = None
+try:
+    import requests
+    from werkzeug.serving import make_server
+except ImportError:
+    requests = None
 
 
 class TestReconplogger(unittest.TestCase):
@@ -148,6 +155,7 @@ class TestReconplogger(unittest.TestCase):
         self.assertRaises(
             ValueError, lambda: reconplogger.logger_setup(level=True))
 
+    @unittest.skipIf(not Flask, "flask package is required")
     def test_flask_app_logger_setup(self):
         """Test flask app logger setup with json logger."""
         env_prefix = 'RECONPLOGGER'
@@ -171,6 +179,7 @@ class TestReconplogger(unittest.TestCase):
         del os.environ['RECONPLOGGER_CFG']
         del os.environ['RECONPLOGGER_NAME']
 
+    @unittest.skipIf(not Flask, "flask package is required")
     def test_flask_app_correlation_id(self):
         """Test that the flask logs contains the correct correlation id"""
         env_prefix = 'RECONPLOGGER'
@@ -233,15 +242,8 @@ class TestReconplogger(unittest.TestCase):
         del os.environ['RECONPLOGGER_CFG']
         del os.environ['RECONPLOGGER_NAME']
 
-    #@unittest.mock.patch("requests.sessions.Session.request_orig")
-    #@unittest.mock.patch("reconplogger.g", spec={}) # https://github.com/pallets/flask/issues/3637 adding spec as workaround for a python 3.8 bug
-    #@unittest.mock.patch("reconplogger.has_request_context", return_value=True)
-    #def test_requests_patch(self, mock_has_request_context, mock_g, mock_request_orig):
-    #    mock_g.correlation_id = uuid.uuid4()
-    #    requests.get("http://dummy")
-    #    mock_request_orig.assert_called_once_with(
-    #        allow_redirects=True, headers={'Correlation-ID': mock_g.correlation_id},
-    #        method='get', params=None, url='http://dummy')
+    @unittest.skipIf(not Flask, "flask package is required")
+    @unittest.skipIf(not requests, "requests and werkzeug packages are required")
     def test_requests_patch(self):
         app = Flask(__name__)
         reconplogger.flask_app_logger_setup(app)
@@ -255,14 +257,12 @@ class TestReconplogger(unittest.TestCase):
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
 
-        correlation_id = str(uuid.uuid4())
-        response = requests.get(f"http://localhost:{port}/id", headers={'Correlation-ID': correlation_id})
-        self.assertEqual(correlation_id, response.text)
-        self.assertEqual(correlation_id, response.headers['Correlation-ID'])
-
-        #with app.test_request_context():# as ctx:
-        #    correlation_id = str(uuid.uuid4())
-        #    response = requests.get(f"http://localhost:{port}/id", headers={'Correlation-ID': correlation_id})
+        with app.test_request_context():
+            correlation_id = str(uuid.uuid4())
+            reconplogger.set_correlation_id(correlation_id)
+            response = requests.get(f"http://localhost:{port}/id")
+            self.assertEqual(correlation_id, response.text)
+            self.assertEqual(correlation_id, response.headers['Correlation-ID'])
 
         server.shutdown()
 
@@ -319,5 +319,37 @@ def run_tests():
         sys.exit(True)
 
 
-if __name__ == '__main__':
+def reimport_reconplogger():
+    del sys.modules['reconplogger']
+    if requests:
+        requests.sessions.Session.request = requests.sessions.Session.request_orig
+    import reconplogger
+
+
+def run_test_coverage():
+    try:
+        import coverage
+    except:
+        print('error: coverage package not found, run_test_coverage requires it.')
+        sys.exit(True)
+    cov = coverage.Coverage(source=['reconplogger'])
+    cov.start()
+    reimport_reconplogger()
     run_tests()
+    cov.stop()
+    cov.save()
+    cov.report()
+    if 'xml' in sys.argv:
+        outfile = sys.argv[sys.argv.index('xml')+1]
+        cov.xml_report(outfile=outfile)
+        print('\nSaved coverage report to '+outfile+'.')
+    else:
+        cov.html_report(directory='htmlcov')
+        print('\nSaved html coverage report to htmlcov directory.')
+
+
+if __name__ == '__main__':
+    if 'coverage' in sys.argv:
+        run_test_coverage()
+    else:
+        run_tests()

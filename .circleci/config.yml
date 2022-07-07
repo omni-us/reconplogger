@@ -27,7 +27,7 @@ jobs:
             virtualenv -p python3 venv$py
             . venv$py/bin/activate
             pip3 install $(ls ./dist/*.whl)[test]
-            ./setup.py test_coverage --xml coverage_py$py.xml
+            python3 -m reconplogger_tests coverage xml coverage_py$py.xml
       - persist_to_workspace:
           root: .
           paths:
