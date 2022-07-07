@@ -26,7 +26,7 @@ jobs:
             py=$(python3 --version | sed -r 's|.* 3\.([0-9]+)\..*|3.\1|')
             virtualenv -p python3 venv$py
             . venv$py/bin/activate
-            pip3 install $(ls ./dist/*.whl)[test]
+            pip3 install $(ls ./dist/*.whl)[test,all]
             python3 -m reconplogger_tests coverage xml coverage_py$py.xml
       - persist_to_workspace:
           root: .
