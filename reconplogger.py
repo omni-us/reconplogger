@@ -328,12 +328,6 @@ def flask_app_logger_setup(
             return True
     flask_app.logger.addFilter(FlaskLoggingFilter())
 
-    # Setup werkzeug logger
-    werkzeug_logger = logging.getLogger('werkzeug')
-    replace_logger_handlers(werkzeug_logger, logger)
-    werkzeug_logger.setLevel(logger.level)
-    werkzeug_logger.parent = logger.parent
-
     return logger
 
 
