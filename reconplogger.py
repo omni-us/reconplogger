@@ -6,7 +6,6 @@ import logging.config
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 from typing import Optional, Union
 import uuid
-import sys
 import time
 
 
@@ -79,7 +78,7 @@ logging_levels = {
     'DEBUG':    DEBUG,
     'NOTSET':   NOTSET,
 }
-logging_levels.update({v: v for v in logging_levels})
+logging_levels.update({v: v for v in logging_levels.values()})  # Also accept int keys
 
 null_logger = logging.Logger('null')
 null_logger.addHandler(logging.NullHandler())
@@ -293,6 +292,7 @@ def flask_app_logger_setup(
     """
     # Configure logging and get logger
     logger = logger_setup(logger_name=logger_name, config=config, level=level, env_prefix=env_prefix, parent=parent)
+    is_json_logger = logger.handlers[0].formatter.__class__.__name__ == 'JsonFormatter'
 
     # Setup flask logger
     replace_logger_handlers(flask_app.logger, logger)
@@ -308,15 +308,26 @@ def flask_app_logger_setup(
     def _flask_logging_after_request(response):
         response.headers.set("Correlation-ID", g.correlation_id)
         if request.path not in flask_request_completed_skip_endpoints:
-            flask_app.logger.info("Request is completed", extra={
-                "http_endpoint": request.path,
-                "http_method": request.method,
-                "http_response_code": response.status_code,
-                "http_response_size": sys.getsizeof(response),
-                "http_input_payload_size": request.content_length,
-                "http_input_payload_type": request.content_type,
-                "http_response_time": str(time.time() - g.start_time),
-            })
+            if is_json_logger:
+                message = "Request completed"
+            else:
+                message = (
+                    f'{request.remote_addr} {request.method} {request.path} '
+                    f'{request.environ.get("SERVER_PROTOCOL")} {response.status_code}'
+                )
+            flask_app.logger.info(
+                message,
+                extra={
+                    "http_endpoint": request.path,
+                    "http_method": request.method,
+                    "http_response_code": response.status_code,
+                    "http_response_size": response.calculate_content_length(),
+                    "http_input_payload_size": request.content_length or 0,
+                    "http_input_payload_type": request.content_type or "",
+                    "http_response_time_ms": f'{1000*(time.time() - g.start_time):.0f}',
+                }
+            )
+
         return response
     flask_app.after_request_funcs.setdefault(None, []).append(_flask_logging_after_request)
 
@@ -327,6 +338,15 @@ def flask_app_logger_setup(
                 record.correlation_id = g.correlation_id
             return True
     flask_app.logger.addFilter(FlaskLoggingFilter())
+
+    # Setup werkzeug logger at least at WARNING level in case its server is used
+    # since it also logs at INFO level after each request creating redundancy
+    werkzeug_logger = logging.getLogger('werkzeug')
+    replace_logger_handlers(werkzeug_logger, logger)
+    werkzeug_logger.setLevel(max(logger.level, WARNING))
+    werkzeug_logger.parent = logger.parent
+    import werkzeug._internal
+    werkzeug._internal._logger = werkzeug_logger
 
     return logger
 

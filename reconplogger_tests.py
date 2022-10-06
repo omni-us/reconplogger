@@ -10,6 +10,7 @@ import tempfile
 import threading
 import unittest
 import uuid
+from unittest.mock import patch
 from testfixtures import LogCapture, compare, Comparison
 
 try:
@@ -43,10 +44,9 @@ class TestReconplogger(unittest.TestCase):
         self.assertEqual(logger.handlers[0].level, logging.INFO)
         logger = reconplogger.logger_setup(level='ERROR')
         self.assertEqual(logger.handlers[0].level, logging.ERROR)
-        os.environ['LOGGER_LEVEL'] = 'WARNING'
-        logger = reconplogger.logger_setup(level='INFO', env_prefix='LOGGER')
-        self.assertEqual(logger.handlers[0].level, logging.WARNING)
-        del os.environ['LOGGER_LEVEL']
+        with patch.dict(os.environ, {'LOGGER_LEVEL': 'WARNING'}):
+            logger = reconplogger.logger_setup(level='INFO', env_prefix='LOGGER')
+            self.assertEqual(logger.handlers[0].level, logging.WARNING)
 
     def test_default_logger_with_exception(self):
         """Test exception logging with the default config and json logger."""
@@ -105,11 +105,9 @@ class TestReconplogger(unittest.TestCase):
             reconplogger.test_logger(logger)
             self.assertTrue(any(['WARNING' in v and 'reconplogger' in v for v in log.output]))
 
-    def test_logger_setup_env_prefix(self):
-        """Test logger setup with specifying environment prefix."""
-        env_prefix = 'RECONPLOGGER'
-        os.environ['RECONPLOGGER_NAME'] = 'example_logger'
-        os.environ['RECONPLOGGER_CFG'] = """{
+    @patch.dict(os.environ, {
+        'RECONPLOGGER_NAME': 'example_logger',
+        'RECONPLOGGER_CFG': """{
             "version": 1,
             "formatters": {
                 "verbose": {
@@ -130,19 +128,19 @@ class TestReconplogger(unittest.TestCase):
                 }
             }
         }"""
-        logger = reconplogger.logger_setup(env_prefix=env_prefix)
+    })
+    def test_logger_setup_env_prefix(self):
+        logger = reconplogger.logger_setup(env_prefix='RECONPLOGGER')
         info_msg = 'info message env logger'
         with LogCapture(names='example_logger') as log:
             logger.info(info_msg)
             log.check(('example_logger', 'INFO', info_msg))
 
-        del os.environ['RECONPLOGGER_CFG']
-        del os.environ['RECONPLOGGER_NAME']
-
-        self.assertRaises(
-            ValueError, lambda: reconplogger.logger_setup(env_prefix=None))
-        self.assertRaises(
-            ValueError, lambda: reconplogger.logger_setup(env_prefix=''))
+    def test_logger_setup_env_prefix_invalid(self):
+        for env_prefix in [None, '']:
+            with self.subTest(env_prefix):
+                with self.assertRaises(ValueError):
+                    reconplogger.logger_setup(env_prefix=env_prefix)
 
     def test_undefined_logger(self):
         """Test setting up a logger not already defined."""
@@ -156,14 +154,14 @@ class TestReconplogger(unittest.TestCase):
             ValueError, lambda: reconplogger.logger_setup(level=True))
 
     @unittest.skipIf(not Flask, "flask package is required")
+    @patch.dict(os.environ, {
+        'RECONPLOGGER_CFG': 'reconplogger_default_cfg',
+        'RECONPLOGGER_NAME': 'json_logger',
+    })
     def test_flask_app_logger_setup(self):
-        """Test flask app logger setup with json logger."""
-        env_prefix = 'RECONPLOGGER'
-        os.environ['RECONPLOGGER_CFG'] = 'reconplogger_default_cfg'
-        os.environ['RECONPLOGGER_NAME'] = 'json_logger'
         app = Flask(__name__)
         reconplogger.flask_app_logger_setup(
-            env_prefix=env_prefix, flask_app=app)
+            env_prefix='RECONPLOGGER', flask_app=app)
         assert app.logger.filters  # pylint: disable=no-member
         assert app.before_request_funcs
         assert app.after_request_funcs
@@ -176,15 +174,13 @@ class TestReconplogger(unittest.TestCase):
                 (app.logger.name, 'WARNING', flask_msg),
                 ('werkzeug', 'WARNING', werkzeug_msg),
             )
-        del os.environ['RECONPLOGGER_CFG']
-        del os.environ['RECONPLOGGER_NAME']
 
     @unittest.skipIf(not Flask, "flask package is required")
+    @patch.dict(os.environ, {
+        'RECONPLOGGER_CFG': 'reconplogger_default_cfg',
+        'RECONPLOGGER_NAME': 'json_logger',
+    })
     def test_flask_app_correlation_id(self):
-        """Test that the flask logs contains the correct correlation id"""
-        env_prefix = 'RECONPLOGGER'
-        os.environ['RECONPLOGGER_CFG'] = 'reconplogger_default_cfg'
-        os.environ['RECONPLOGGER_NAME'] = 'json_logger'
         app = Flask(__name__)
         flask_msg = 'flask message with correlation id'
 
@@ -204,8 +200,7 @@ class TestReconplogger(unittest.TestCase):
             logs.check((app.logger.name, 'ERROR'))
         self.assertEqual(response.status_code, 500)
 
-        reconplogger.flask_app_logger_setup(
-            env_prefix=env_prefix, flask_app=app)
+        reconplogger.flask_app_logger_setup(env_prefix='RECONPLOGGER', flask_app=app)
         client = app.test_client()
 
         self.assertRaises(RuntimeError, lambda: reconplogger.get_correlation_id())
@@ -218,7 +213,7 @@ class TestReconplogger(unittest.TestCase):
             self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)
             logs.check(
                 (app.logger.name, 'INFO', flask_msg, correlation_id),
-                (app.logger.name, 'INFO', "Request is completed", correlation_id),
+                (app.logger.name, 'INFO', "Request completed", correlation_id),
             )
         # Check correlation id creation
         with LogCapture(names=app.logger.name, attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
@@ -227,7 +222,7 @@ class TestReconplogger(unittest.TestCase):
             uuid.UUID(correlation_id)
             logs.check(
                 (app.logger.name, 'INFO', flask_msg, correlation_id),
-                (app.logger.name, 'INFO', "Request is completed", correlation_id),
+                (app.logger.name, 'INFO', "Request completed", correlation_id),
             )
         # Check set correlation id
         with LogCapture(names=app.logger.name, attributes=('name', 'levelname', 'getMessage', 'correlation_id')) as logs:
@@ -236,17 +231,14 @@ class TestReconplogger(unittest.TestCase):
             self.assertEqual(response.data.decode('utf-8'), 'correlation_id='+correlation_id)
             logs.check(
                 (app.logger.name, 'INFO', flask_msg, correlation_id),
-                (app.logger.name, 'INFO', "Request is completed", correlation_id),
+                (app.logger.name, 'INFO', "Request completed", correlation_id),
             )
-
-        del os.environ['RECONPLOGGER_CFG']
-        del os.environ['RECONPLOGGER_NAME']
 
     @unittest.skipIf(not Flask, "flask package is required")
     @unittest.skipIf(not requests, "requests and werkzeug packages are required")
     def test_requests_patch(self):
         app = Flask(__name__)
-        reconplogger.flask_app_logger_setup(app)
+        logger = reconplogger.flask_app_logger_setup(app)
 
         @app.route("/id")
         def get_id():
@@ -256,6 +248,10 @@ class TestReconplogger(unittest.TestCase):
         server = make_server("localhost", port, app)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
+
+        werkzeug_logger = logging.getLogger('werkzeug')
+        self.assertEqual(werkzeug_logger.handlers, logger.handlers)
+        self.assertGreaterEqual(werkzeug_logger.level, reconplogger.WARNING)
 
         with app.test_request_context():
             correlation_id = str(uuid.uuid4())
