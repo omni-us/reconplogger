@@ -40,12 +40,12 @@ class TestReconplogger(unittest.TestCase):
 
     def test_log_level(self):
         """Test load config with the default config and plain logger changing the log level."""
-        logger = reconplogger.logger_setup(level='INFO')
+        logger = reconplogger.logger_setup(level='INFO', reload=True)
         self.assertEqual(logger.handlers[0].level, logging.INFO)
-        logger = reconplogger.logger_setup(level='ERROR')
+        logger = reconplogger.logger_setup(level='ERROR', reload=True)
         self.assertEqual(logger.handlers[0].level, logging.ERROR)
         with patch.dict(os.environ, {'LOGGER_LEVEL': 'WARNING'}):
-            logger = reconplogger.logger_setup(level='INFO', env_prefix='LOGGER')
+            logger = reconplogger.logger_setup(level='INFO', env_prefix='LOGGER', reload=True)
             self.assertEqual(logger.handlers[0].level, logging.WARNING)
 
     def test_default_logger_with_exception(self):
@@ -100,7 +100,7 @@ class TestReconplogger(unittest.TestCase):
             ValueError, lambda: reconplogger.replace_logger_handlers(False, False))
 
     def test_init_messages(self):
-        logger = reconplogger.logger_setup(init_messages=True)
+        logger = reconplogger.logger_setup(init_messages=True, reload=True)
         with self.assertLogs(logger='plain_logger', level='WARNING') as log:
             reconplogger.test_logger(logger)
             self.assertTrue(any(['WARNING' in v and 'reconplogger' in v for v in log.output]))
@@ -148,10 +148,10 @@ class TestReconplogger(unittest.TestCase):
             ValueError, lambda: reconplogger.logger_setup('undefined_logger'))
 
     def test_logger_setup_invalid_level(self):
-        self.assertRaises(
-            ValueError, lambda: reconplogger.logger_setup(level='INVALID'))
-        self.assertRaises(
-            ValueError, lambda: reconplogger.logger_setup(level=True))
+        with self.assertRaises(ValueError):
+            reconplogger.logger_setup(level='INVALID', reload=True)
+        with self.assertRaises(ValueError):
+            reconplogger.logger_setup(level=True, reload=True)
 
     @unittest.skipIf(not Flask, "flask package is required")
     @patch.dict(os.environ, {
