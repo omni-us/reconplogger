@@ -18,13 +18,6 @@ repos:
     pass_filenames: false
     verbose: true
 
-  - name: circleci config
-    id: circleci config validate -c .circleci/config.yml
-    entry: circleci config validate -c
-    language: system
-    files: .circleci/config.yml
-    verbose: true
-
   - name: pylint
     id: pylint --errors-only --disable=no-member
     entry: pylint --errors-only --disable=no-member

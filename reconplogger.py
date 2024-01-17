@@ -240,7 +240,12 @@ def logger_setup(
     load_config(os.getenv(env_cfg, config), reload=reload)
 
     # Get logger
-    logger = get_logger(os.getenv(env_name, logger_name))
+    name = os.getenv(env_name, logger_name)
+    logger = get_logger(name)
+    if getattr(logger, '_reconplogger_setup', False) and not reload:
+        if parent or level or init_messages:
+            logger.debug(f'logger {name} already setup by reconplogger, ignoring overriding parameters.')
+        return logger
 
     # Override parent
     logger.parent = parent
@@ -256,13 +261,15 @@ def logger_setup(
         else:
             raise ValueError('Expected level argument to be a string.')
         for handler in logger.handlers:
-            handler.setLevel(level)
+            if not isinstance(handler, logging.FileHandler):
+                handler.setLevel(level)
 
     # Log configured done and test logger
     if init_messages:
         logger.info('reconplogger (v'+__version__+') logger configured.')
         test_logger(logger)
 
+    logger._reconplogger_setup = True
     return logger
 
 
