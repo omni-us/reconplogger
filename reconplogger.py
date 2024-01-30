@@ -1,8 +1,10 @@
-
 import os
 import yaml
 import logging
 import logging.config
+from contextlib import contextmanager
+from contextvars import ContextVar
+from importlib.util import find_spec
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 from typing import Optional, Union
 import uuid
@@ -264,6 +266,9 @@ def logger_setup(
             if not isinstance(handler, logging.FileHandler):
                 handler.setLevel(level)
 
+    # Add correlation id filter
+    logger.addFilter(_CorrelationIdLoggingFilter())
+
     # Log configured done and test logger
     if init_messages:
         logger.info('reconplogger (v'+__version__+') logger configured.')
@@ -338,13 +343,8 @@ def flask_app_logger_setup(
         return response
     flask_app.after_request_funcs.setdefault(None, []).append(_flask_logging_after_request)
 
-    # Add logging filter to augment the logs
-    class FlaskLoggingFilter(logging.Filter):
-        def filter(self, record):
-            if has_request_context():
-                record.correlation_id = g.correlation_id
-            return True
-    flask_app.logger.addFilter(FlaskLoggingFilter())
+    # Add correlation id filter
+    flask_app.logger.addFilter(_CorrelationIdLoggingFilter())
 
     # Setup werkzeug logger at least at WARNING level in case its server is used
     # since it also logs at INFO level after each request creating redundancy
@@ -365,13 +365,18 @@ def get_correlation_id() -> str:
         ImportError: When flask package not available.
         RuntimeError: When run outside an application context or if flask app has not been setup.
     """
-    from flask import g
+    correlation_id = current_correlation_id.get()
+    if correlation_id is not None:
+        return correlation_id
+    if find_spec("flask") is None:
+        raise RuntimeError("get_correlation_id used outside correlation_id_context.")
+
     try:
-        has_correlation_id = hasattr(g, 'correlation_id')
+        has_correlation_id = hasattr(g, "correlation_id")
     except RuntimeError:
-        raise RuntimeError('get_correlation_id only intended to be used inside an application context.')
+        raise RuntimeError("get_correlation_id used outside correlation_id_context or flask app context.")
     if not has_correlation_id:
-        raise RuntimeError('correlation_id not found in flask.g, probably flask app not yet setup.')
+        raise RuntimeError("correlation_id not found in flask.g, probably flask app not yet setup.")
     return g.correlation_id
 
 
@@ -388,6 +393,36 @@ def set_correlation_id(correlation_id: str):
     except RuntimeError:
         raise RuntimeError('set_correlation_id only intended to be used inside an application context.')
     g.correlation_id = str(correlation_id)  # pylint: disable=assigning-non-slot
+
+
+current_correlation_id: ContextVar[Optional[str]] = ContextVar('current_correlation_id', default=None)
+
+
+@contextmanager
+def correlation_id_context(correlation_id: Optional[str]):
+    """Context manager to set the correlation id for the current application context.
+
+    Use as `with correlation_id_context(correlation_id): ...`. Calls to
+    `get_correlation_id()` will return the correlation id set for the context.
+
+    Args:
+        correlation_id: The correlation id to set in the context.
+    """
+    token = current_correlation_id.set(correlation_id)
+    try:
+        yield
+    finally:
+        current_correlation_id.reset(token)
+
+
+class _CorrelationIdLoggingFilter(logging.Filter):
+    def filter(self, record):
+        correlation_id = current_correlation_id.get()
+        if correlation_id is not None:
+            record.correlation_id = correlation_id
+        elif find_spec("flask") and has_request_context():
+            record.correlation_id = g.correlation_id
+        return True
 
 
 class RLoggerProperty:

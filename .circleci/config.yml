@@ -18,16 +18,13 @@ jobs:
     docker:
       - image: cimg/python:3.8
     steps:
-      - attach_workspace:
-          at: .
+      - checkout
       - run:
           name: Run unit tests
           command: |
             py=$(python3 --version | sed -r 's|.* 3\.([0-9]+)\..*|3.\1|')
-            virtualenv -p python3 venv$py
-            . venv$py/bin/activate
-            pip3 install $(ls ./dist/*.whl)[test,all]
-            python3 -m reconplogger_tests coverage xml coverage_py$py.xml
+            pip3 install .[test,all]
+            TEST_COVERAGE_XML=coverage_py$py.xml ./setup.py test_coverage
       - persist_to_workspace:
           root: .
           paths:
@@ -67,6 +64,17 @@ jobs:
                 --flags py$py \
                 --file coverage_py$py.xml
             done
+  test-py310-installed:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run unit tests
+          command: |
+            pip3 install $(ls ./dist/*.whl)[test,all]
+            python3 -m reconplogger_tests
   publish-pypi:
     docker:
       - image: cimg/python:3.10
@@ -87,26 +95,27 @@ workflows:
           filters: &tagfilter
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
-      - test-py38: &testreq
+      - test-py38:
           <<: *buildreq
-          requires:
-            - build
       - test-py312:
-          <<: *testreq
+          <<: *buildreq
       - test-py311:
-          <<: *testreq
+          <<: *buildreq
       - test-py310:
-          <<: *testreq
+          <<: *buildreq
       - test-py39:
-          <<: *testreq
+          <<: *buildreq
       - codecov:
-          <<: *testreq
           requires:
             - test-py312
             - test-py311
             - test-py310
             - test-py39
             - test-py38
+      - test-py310-installed:
+          <<: *buildreq
+          requires:
+            - build
       - publish-pypi:
           filters:
             branches:
@@ -115,3 +124,4 @@ workflows:
           context: pypi-upload-context
           requires:
             - codecov
+            - test-py310-installed

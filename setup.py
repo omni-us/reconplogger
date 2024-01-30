@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 from setuptools import setup, Command
+import os
 import re
 import sys
+import unittest
 
 
-NAME_TESTS = next(filter(lambda x: x.startswith('test_suite = '), open('setup.cfg').readlines())).strip().split()[-1]
 LONG_DESCRIPTION = re.sub(':class:|:func:|:ref:', '', open('README.rst').read())
 CMDCLASS = {}
 
@@ -17,7 +18,26 @@ class CoverageCommand(Command):
     def initialize_options(self): pass
     def finalize_options(self): pass
     def run(self):
-        __import__(NAME_TESTS).run_test_coverage()
+        try:
+            import coverage
+        except ImportError:
+            print('error: coverage package not found, run_test_coverage requires it.')
+            sys.exit(True)
+        cov = coverage.Coverage(source=['reconplogger'])
+        cov.start()
+        tests = unittest.defaultTestLoader.loadTestsFromName('reconplogger_tests')
+        if not unittest.TextTestRunner(verbosity=2).run(tests).wasSuccessful():
+            sys.exit(True)
+        cov.stop()
+        cov.save()
+        cov.report()
+        if 'TEST_COVERAGE_XML' in os.environ:
+            outfile = os.environ['TEST_COVERAGE_XML']
+            cov.xml_report(outfile=outfile)
+            print('\nSaved coverage report to '+outfile+'.')
+        else:
+            cov.html_report(directory='htmlcov')
+            print('\nSaved html coverage report to htmlcov directory.')
 
 CMDCLASS['test_coverage'] = CoverageCommand
 
