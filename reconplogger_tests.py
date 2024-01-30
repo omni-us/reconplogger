@@ -10,8 +10,11 @@ import tempfile
 import threading
 import unittest
 import uuid
+from contextlib import ExitStack, contextmanager
+from io import StringIO
 from unittest.mock import patch
 from testfixtures import LogCapture, compare, Comparison
+from typing import Iterator
 
 try:
     from flask import Flask, request
@@ -22,6 +25,16 @@ try:
     from werkzeug.serving import make_server
 except ImportError:
     requests = None
+
+
+@contextmanager
+def capture_logs(logger: logging.Logger) -> Iterator[StringIO]:
+    with ExitStack() as stack:
+        captured = StringIO()
+        for handler in logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                stack.enter_context(patch.object(handler, "stream", captured))
+        yield captured
 
 
 class TestReconplogger(unittest.TestCase):
@@ -152,6 +165,23 @@ class TestReconplogger(unittest.TestCase):
             reconplogger.logger_setup(level='INVALID', reload=True)
         with self.assertRaises(ValueError):
             reconplogger.logger_setup(level=True, reload=True)
+
+    @patch.dict(os.environ, {'LOGGER_NAME': 'json_logger'})
+    def test_correlation_id_context(self):
+        logger = reconplogger.logger_setup()
+        correlation_id = str(uuid.uuid4())
+        with reconplogger.correlation_id_context(correlation_id):
+            self.assertEqual(correlation_id, reconplogger.get_correlation_id())
+            with capture_logs(logger) as logs:
+                logger.error('error message')
+                self.assertIn(correlation_id, logs.getvalue())
+
+    def test_get_correlation_id_outside_of_context(self):
+        with patch("reconplogger.find_spec", return_value=None):
+            self.assertIsNone(reconplogger.find_spec("flask"))
+            with self.assertRaises(RuntimeError) as ctx:
+                reconplogger.get_correlation_id()
+            self.assertIn("used outside correlation_id_context", str(ctx.exception))
 
     @unittest.skipIf(not Flask, "flask package is required")
     @patch.dict(os.environ, {
@@ -315,37 +345,5 @@ def run_tests():
         sys.exit(True)
 
 
-def reimport_reconplogger():
-    del sys.modules['reconplogger']
-    if requests:
-        requests.sessions.Session.request = requests.sessions.Session.request_orig
-    import reconplogger
-
-
-def run_test_coverage():
-    try:
-        import coverage
-    except:
-        print('error: coverage package not found, run_test_coverage requires it.')
-        sys.exit(True)
-    cov = coverage.Coverage(source=['reconplogger'])
-    cov.start()
-    reimport_reconplogger()
-    run_tests()
-    cov.stop()
-    cov.save()
-    cov.report()
-    if 'xml' in sys.argv:
-        outfile = sys.argv[sys.argv.index('xml')+1]
-        cov.xml_report(outfile=outfile)
-        print('\nSaved coverage report to '+outfile+'.')
-    else:
-        cov.html_report(directory='htmlcov')
-        print('\nSaved html coverage report to htmlcov directory.')
-
-
 if __name__ == '__main__':
-    if 'coverage' in sys.argv:
-        run_test_coverage()
-    else:
-        run_tests()
+    run_tests()

@@ -15,12 +15,13 @@ ease the standardization of logging within omni:us. The main design decision of
 reconplogger is to allow total freedom to reconfigure loggers without hard
 coding anything.
 
-The package contains essentially three things:
+The package contains essentially the following things:
 
 - A default logging configuration.
 - A function for loading logging configuration for regular python code.
 - A function for loading logging configuration for flask-based microservices.
 - An inheritable class to add a logger property.
+- A context manager to set and get the correlation id.
 - Lower level functions for:
 
   - Loading logging configuration from any of: config file, environment variable, or default.
