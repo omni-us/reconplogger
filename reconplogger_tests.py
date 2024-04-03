@@ -241,7 +241,7 @@ class TestReconplogger(unittest.TestCase):
                 correlation_id = request.args.get("id")
                 reconplogger.set_correlation_id(correlation_id)
             app.logger.info(flask_msg)  # pylint: disable=no-member
-            return "correlation_id=" + correlation_id
+            return "correlation_id=" + str(correlation_id)
 
         client = app.test_client()
         with LogCapture(
@@ -271,14 +271,14 @@ class TestReconplogger(unittest.TestCase):
                 (app.logger.name, "INFO", flask_msg, correlation_id),
                 (app.logger.name, "INFO", "Request completed", correlation_id),
             )
-        # Check correlation id creation
+        # Check missing correlation id
         with LogCapture(
             names=app.logger.name,
             attributes=("name", "levelname", "getMessage", "correlation_id"),
         ) as logs:
             client.get("/")
             correlation_id = logs.actual()[0][3]
-            uuid.UUID(correlation_id)
+            self.assertIsNone(correlation_id)
             logs.check(
                 (app.logger.name, "INFO", flask_msg, correlation_id),
                 (app.logger.name, "INFO", "Request completed", correlation_id),
