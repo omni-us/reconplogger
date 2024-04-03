@@ -7,7 +7,6 @@ from contextvars import ContextVar
 from importlib.util import find_spec
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 from typing import Optional, Union
-import uuid
 import time
 
 
@@ -23,7 +22,7 @@ try:
 
     def _request_patch(slf, *args, **kwargs):
         headers = kwargs.pop("headers", {})
-        if has_request_context():
+        if has_request_context() and g.correlation_id:
             headers["Correlation-ID"] = g.correlation_id
         return slf.request_orig(*args, **kwargs, headers=headers)
 
@@ -336,7 +335,7 @@ def flask_app_logger_setup(
     # Add flask before and after request functions to augment the logs
     def _flask_logging_before_request():
         g.correlation_id = request.headers.get(
-            "Correlation-ID", str(uuid.uuid4())
+            "Correlation-ID", None
         )  # pylint: disable=assigning-non-slot
         g.start_time = time.time()  # pylint: disable=assigning-non-slot
 
@@ -345,7 +344,8 @@ def flask_app_logger_setup(
     )
 
     def _flask_logging_after_request(response):
-        response.headers.set("Correlation-ID", g.correlation_id)
+        if g.correlation_id:
+            response.headers.set("Correlation-ID", g.correlation_id)
         if request.path not in flask_request_completed_skip_endpoints:
             if is_json_logger:
                 message = "Request completed"

@@ -143,8 +143,8 @@ In a system build with microservices we need a way to correlate logs coming from
 For example when a user of our system do a call to the MicroserviceA this could need to retrieve some information from the MicroserviceB,
 if there is an error and we want to check the logs of the MicroserviceB related to the user call we don't have a way to correlate them,
 to solve this we use the correlation id!
-Its a uuid4 that its passed in the headers of the rest calls and will be forwarded automatically when we do calls with the library *requests*,
-if the correlation id its not present in the request headers it will be generated, all of this is taken care in the background by this library.
+It is a unique string that is passed in the headers of the REST calls and will be forwarded automatically when we do calls with the library *requests*. All of this is taken care in the background by this library.
+If the correlation id its not present in the request headers, it will not be generated. It is up to developers to explicitly create a correlation id.
 
 
 The usage would be as follows:
