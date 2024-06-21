@@ -24,6 +24,8 @@ try:
         headers = kwargs.pop("headers", {})
         if has_request_context() and g.correlation_id:
             headers["Correlation-ID"] = g.correlation_id
+        elif current_correlation_id.get() is not None:
+            headers["Correlation-ID"] = current_correlation_id.get()
         return slf.request_orig(*args, **kwargs, headers=headers)
 
     setattr(

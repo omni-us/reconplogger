@@ -317,6 +317,13 @@ class TestReconplogger(unittest.TestCase):
         self.assertEqual(werkzeug_logger.handlers, logger.handlers)
         self.assertGreaterEqual(werkzeug_logger.level, reconplogger.WARNING)
 
+        correlation_id = str(uuid.uuid4())
+        with reconplogger.correlation_id_context(correlation_id):
+            response = requests.get(f"http://localhost:{port}/id")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(correlation_id, response.text)
+            self.assertEqual(correlation_id, response.headers["Correlation-ID"])
+
         with app.test_request_context():
             correlation_id = str(uuid.uuid4())
             reconplogger.set_correlation_id(correlation_id)
