@@ -10,7 +10,7 @@ from typing import Optional, Union
 import time
 
 
-__version__ = "4.16.0"
+__version__ = "4.16.1"
 
 
 try:
