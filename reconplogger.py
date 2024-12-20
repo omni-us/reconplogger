@@ -1,7 +1,9 @@
+import datetime
 import os
 import yaml
 import logging
 import logging.config
+import pythonjsonlogger
 from contextlib import contextmanager
 from contextvars import ContextVar
 from importlib.util import find_spec
@@ -47,7 +49,7 @@ reconplogger_default_cfg = {
         },
         "json": {
             "format": reconplogger_format.replace("asctime", "timestamp"),
-            "class": "logmatic.JsonFormatter",
+            "class": "reconplogger.JsonFormatter",
         },
     },
     "handlers": {
@@ -496,3 +498,39 @@ class RLoggerProperty:
             self._rlogger = logger_setup()
         else:
             self._rlogger = logger
+
+
+class JsonFormatter(pythonjsonlogger.json.JsonFormatter):
+    """JSON formatter from https://github.com/logmatic/logmatic-python/
+
+    The MIT License (MIT)
+    Copyright (c) 2017 Logmatic.io
+    """
+
+    def __init__(
+        self,
+        fmt="%(asctime) %(name) %(processName) %(filename)  %(funcName) %(levelname) %(lineno) %(module) %(threadName) %(message)",
+        datefmt="%Y-%m-%dT%H:%M:%SZ%z",
+        style="%",
+        extra={},
+        *args,
+        **kwargs,
+    ):
+        self._extra = extra
+        pythonjsonlogger.json.JsonFormatter.__init__(
+            self, fmt=fmt, datefmt=datefmt, *args, **kwargs
+        )
+
+    def process_log_record(self, log_record):
+        # Enforce the presence of a timestamp
+        if "asctime" in log_record:
+            log_record["timestamp"] = log_record["asctime"]
+        else:
+            log_record["timestamp"] = datetime.datetime.now(
+                datetime.timezone.utc
+            ).strftime("%Y-%m-%dT%H:%M:%S.%fZ%z")
+
+        if self._extra is not None:
+            for key, value in self._extra.items():
+                log_record[key] = value
+        return super().process_log_record(log_record)
