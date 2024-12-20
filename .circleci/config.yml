@@ -101,6 +101,8 @@ workflows:
               only: /^v\d+\.\d+\.\d+.*$/
       - test-py38:
           <<: *buildreq
+      - test-py313:
+          <<: *buildreq
       - test-py312:
           <<: *buildreq
       - test-py311:
