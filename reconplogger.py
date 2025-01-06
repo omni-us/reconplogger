@@ -528,7 +528,7 @@ class JsonFormatter(pythonjsonlogger.json.JsonFormatter):
         else:
             log_record["timestamp"] = datetime.datetime.now(
                 datetime.timezone.utc
-            ).strftime("%Y-%m-%dT%H:%M:%S.%fZ%z")
+            ).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
         if self._extra is not None:
             for key, value in self._extra.items():
