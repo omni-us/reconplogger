@@ -469,13 +469,19 @@ class _CorrelationIdLoggingFilter(logging.Filter):
         return True
 
 
+_unset = object()
+
+
 class RLoggerProperty:
     """Class designed to be inherited by other classes to add an rlogger property."""
 
     def __init__(self, *args, **kwargs):
         """Initializer for LoggerProperty class."""
+        rlogger = kwargs.pop("rlogger", _unset)
         super().__init__(*args, **kwargs)
-        if not hasattr(self, "_rlogger"):
+        if rlogger is not _unset:
+            self.rlogger = rlogger
+        elif not hasattr(self, "_rlogger"):
             self.rlogger = True
 
     @property

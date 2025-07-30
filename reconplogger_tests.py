@@ -378,7 +378,10 @@ class TestReconplogger(unittest.TestCase):
         class MyClass(reconplogger.RLoggerProperty):
             pass
 
-        myclass = MyClass()
+        custom_logger = logging.getLogger("custom_logger")
+
+        myclass = MyClass(rlogger=custom_logger)
+        self.assertEqual(myclass.rlogger, custom_logger)
         myclass.rlogger = False
         self.assertEqual(myclass.rlogger, reconplogger.null_logger)
         myclass.rlogger = True
