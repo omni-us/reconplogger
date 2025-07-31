@@ -1,26 +1,25 @@
 import datetime
-import os
-import yaml
 import logging
 import logging.config
-import pythonjsonlogger
+import os
+import time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from importlib.util import find_spec
-from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARNING
 from typing import Optional, Union
-import time
 
+import pythonjsonlogger
+import yaml
 
 __version__ = "4.17.1"
 
 
 try:
     # If flask is installed import the request context objects
-    from flask import request, g, has_request_context
-
     # If requests is installed patch the calls to add the correlation id
     import requests
+    from flask import g, has_request_context, request
 
     def _request_patch(slf, *args, **kwargs):
         headers = kwargs.pop("headers", {})
@@ -30,16 +29,12 @@ try:
             headers["Correlation-ID"] = current_correlation_id.get()
         return slf.request_orig(*args, **kwargs, headers=headers)
 
-    setattr(
-        requests.sessions.Session, "request_orig", requests.sessions.Session.request
-    )
+    setattr(requests.sessions.Session, "request_orig", requests.sessions.Session.request)
     requests.sessions.Session.request = _request_patch
 except ImportError:  # pragma: no cover
     pass
 
-reconplogger_format = (
-    "%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s"
-)
+reconplogger_format = "%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s"
 
 reconplogger_default_cfg = {
     "version": 1,
@@ -102,7 +97,8 @@ def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
     """Loads a logging configuration from path or environment variable or dictionary object.
 
     Args:
-        cfg: Path to configuration file (json|yaml), or name of environment variable (json|yaml) or configuration object or None/"reconplogger_default_cfg" to use default configuration.
+        cfg: Path to configuration file (json|yaml), or name of environment variable (json|yaml) or
+            configuration object or None/"reconplogger_default_cfg" to use default configuration.
 
     Returns:
         The logging package object.
@@ -131,7 +127,9 @@ def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
                     raise ValueError
         except Exception:
             raise ValueError(
-                "Received string which is neither a path to an existing file nor the name of an set environment variable nor a python dictionary string that can be consumed by logging.config.dictConfig."
+                "Received string which is neither a path to an existing file nor the name of an "
+                "set environment variable nor a python dictionary string that can be consumed by "
+                "logging.config.dictConfig."
             )
 
     cfg_dict["disable_existing_loggers"] = False
@@ -218,10 +216,7 @@ def get_logger(logger_name: str) -> logging.Logger:
     Raises:
         ValueError: If the logger does not exist.
     """
-    if (
-        logger_name not in logging.Logger.manager.loggerDict
-        and logger_name not in logging.root.manager.loggerDict
-    ):
+    if logger_name not in logging.Logger.manager.loggerDict and logger_name not in logging.root.manager.loggerDict:
         raise ValueError('Logger "' + str(logger_name) + '" not defined.')
     return logging.getLogger(logger_name)
 
@@ -263,9 +258,7 @@ def logger_setup(
     logger = get_logger(name)
     if getattr(logger, "_reconplogger_setup", False) and not reload:
         if parent or level or init_messages:
-            logger.debug(
-                f"logger {name} already setup by reconplogger, ignoring overriding parameters."
-            )
+            logger.debug(f"logger {name} already setup by reconplogger, ignoring overriding parameters.")
         return logger
 
     # Override parent
@@ -338,14 +331,10 @@ def flask_app_logger_setup(
 
     # Add flask before and after request functions to augment the logs
     def _flask_logging_before_request():
-        g.correlation_id = request.headers.get(
-            "Correlation-ID", None
-        )  # pylint: disable=assigning-non-slot
+        g.correlation_id = request.headers.get("Correlation-ID", None)  # pylint: disable=assigning-non-slot
         g.start_time = time.time()  # pylint: disable=assigning-non-slot
 
-    flask_app.before_request_funcs.setdefault(None, []).append(
-        _flask_logging_before_request
-    )
+    flask_app.before_request_funcs.setdefault(None, []).append(_flask_logging_before_request)
 
     def _flask_logging_after_request(response):
         if g.correlation_id:
@@ -373,9 +362,7 @@ def flask_app_logger_setup(
 
         return response
 
-    flask_app.after_request_funcs.setdefault(None, []).append(
-        _flask_logging_after_request
-    )
+    flask_app.after_request_funcs.setdefault(None, []).append(_flask_logging_after_request)
 
     # Add correlation id filter
     flask_app.logger.addFilter(_CorrelationIdLoggingFilter())
@@ -409,13 +396,9 @@ def get_correlation_id() -> str:
     try:
         has_correlation_id = hasattr(g, "correlation_id")
     except RuntimeError:
-        raise RuntimeError(
-            "get_correlation_id used outside correlation_id_context or flask app context."
-        )
+        raise RuntimeError("get_correlation_id used outside correlation_id_context or flask app context.")
     if not has_correlation_id:
-        raise RuntimeError(
-            "correlation_id not found in flask.g, probably flask app not yet setup."
-        )
+        raise RuntimeError("correlation_id not found in flask.g, probably flask app not yet setup.")
     return g.correlation_id
 
 
@@ -431,15 +414,11 @@ def set_correlation_id(correlation_id: str):
     try:
         hasattr(g, "correlation_id")
     except RuntimeError:
-        raise RuntimeError(
-            "set_correlation_id only intended to be used inside an application context."
-        )
+        raise RuntimeError("set_correlation_id only intended to be used inside an application context.")
     g.correlation_id = str(correlation_id)  # pylint: disable=assigning-non-slot
 
 
-current_correlation_id: ContextVar[Optional[str]] = ContextVar(
-    "current_correlation_id", default=None
-)
+current_correlation_id: ContextVar[Optional[str]] = ContextVar("current_correlation_id", default=None)
 
 
 @contextmanager
@@ -515,7 +494,10 @@ class JsonFormatter(pythonjsonlogger.json.JsonFormatter):
 
     def __init__(
         self,
-        fmt="%(asctime) %(name) %(processName) %(filename)  %(funcName) %(levelname) %(lineno) %(module) %(threadName) %(message)",
+        fmt=(
+            "%(asctime) %(name) %(processName) %(filename)  %(funcName) %(levelname) %(lineno) "
+            "%(module) %(threadName) %(message)"
+        ),
         datefmt="%Y-%m-%dT%H:%M:%SZ%z",
         style="%",
         extra={},
@@ -523,18 +505,14 @@ class JsonFormatter(pythonjsonlogger.json.JsonFormatter):
         **kwargs,
     ):
         self._extra = extra
-        pythonjsonlogger.json.JsonFormatter.__init__(
-            self, fmt=fmt, datefmt=datefmt, *args, **kwargs
-        )
+        pythonjsonlogger.json.JsonFormatter.__init__(self, fmt=fmt, datefmt=datefmt, *args, **kwargs)
 
     def process_log_record(self, log_record):
         # Enforce the presence of a timestamp
         if "asctime" in log_record:
             log_record["timestamp"] = log_record["asctime"]
         else:
-            log_record["timestamp"] = datetime.datetime.now(
-                datetime.timezone.utc
-            ).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            log_record["timestamp"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
         if self._extra is not None:
             for key, value in self._extra.items():

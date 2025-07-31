@@ -1,0 +1,129 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "reconplogger"
+dynamic = ["version"]
+description = "omni:us python logging package"
+authors = [
+    {name = "Mauricio Villegas", email = "mauricio@omnius.com"},
+]
+readme = "README.rst"
+license = {file = "LICENSE.rst"}
+requires-python = ">=3.9"
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+]
+
+dependencies = [
+    "python-json-logger>=3.2.1",
+    "PyYAML>=3.13",
+]
+
+[project.optional-dependencies]
+all = [
+    "Flask>=1.1.1",
+    "requests>=2.24.0",
+]
+test = [
+    "pytest>=6.2.5",
+    "pytest-cov>=4.0.0",
+    "testfixtures==6.10.0",
+]
+dev = [
+    "reconplogger[all]",
+    "reconplogger[test]",
+    "pre-commit>=2.19.0",
+    "tox>=3.25.0",
+]
+doc = [
+    "Sphinx>=1.7.9",
+    "sphinx-rtd-theme>=0.4.3",
+    "autodocsumm>=0.1.10",
+    "sphinx-autodoc-typehints>=1.11.1",
+]
+maintainer = [
+    "bump2version>=0.5.11",
+    "twine>=3.1.1",
+]
+
+[project.urls]
+Documentation-stable = "https://reconplogger.readthedocs.io/en/stable/"
+Documentation-latest = "https://reconplogger.readthedocs.io/en/latest/"
+GitHub = "https://github.com/omni-us/reconplogger"
+PyPI = "https://pypi.org/project/reconplogger"
+Codecov = "https://codecov.io/gh/omni-us/reconplogger"
+
+
+[tool.setuptools]
+platforms = ["Any"]
+py-modules = ["reconplogger", "reconplogger_tests"]
+
+[tool.setuptools.dynamic]
+version = {attr = "reconplogger.__version__"}
+
+
+[tool.pytest.ini_options]
+addopts = "-s"
+testpaths = ["reconplogger_tests.py"]
+
+
+[tool.coverage.run]
+relative_files = true
+source = ["reconplogger"]
+
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # https://pypi.org/project/pycodestyle
+    "F",  # https://pypi.org/project/pyflakes
+    "I",  # https://pypi.org/project/isort
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+
+[tool.black]
+line-length = 120
+
+
+[tool.typos.default.extend-identifiers]
+Villegas = "Villegas"
+
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py{39,310,311,312,313},no-extras
+skip_missing_interpreters = true
+
+[testenv]
+extras =
+    all
+    test
+commands = discover --pattern=reconplogger_tests.py
+deps = discover
+
+[testenv:no-extras]
+extras = test
+"""
