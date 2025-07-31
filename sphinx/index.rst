@@ -1,5 +1,7 @@
 .. include:: ../README.rst
 
+.. include:: ../DOCUMENTATION.rst
+
 Documentation Contents
 ======================
 
