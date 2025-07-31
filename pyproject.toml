@@ -42,14 +42,14 @@ all = [
     "requests>=2.24.0",
 ]
 test = [
+    "pytest>=6.2.5",
+    "pytest-cov>=4.0.0",
     "testfixtures==6.10.0",
-    "coverage>=4.5.1",
 ]
 dev = [
     "reconplogger[all]",
     "reconplogger[test]",
     "pre-commit>=2.19.0",
-    "pylint>=1.8.3",
     "tox>=3.25.0",
 ]
 doc = [
