@@ -12,14 +12,13 @@ authors = [
 ]
 readme = "README.rst"
 license = {file = "LICENSE.rst"}
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -115,7 +114,7 @@ Villegas = "Villegas"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{38,39,310,311,312,313},no-extras
+envlist = py{39,310,311,312,313},no-extras
 skip_missing_interpreters = true
 
 [testenv]
