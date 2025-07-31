@@ -1,9 +1,12 @@
 fail_fast: true
+default_install_hook_types: [pre-commit, pre-push]
+default_language_version:
+  python: python3.12
 
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
+  rev: v5.0.0
   hooks:
   - id: check-added-large-files
   - id: check-ast
@@ -15,12 +18,12 @@ repos:
     exclude: .bumpversion.cfg
 
 - repo: https://github.com/psf/black
-  rev: 24.10.0
+  rev: 25.1.0
   hooks:
   - id: black
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.8.4
+  rev: v0.12.5
   hooks:
   - id: ruff
     args: ["--fix"]
@@ -28,29 +31,32 @@ repos:
 - repo: local
   hooks:
 
-  - name: twine check [on bumpversion]
-    id: ./setup.py bdist_wheel && twine check dist/*.whl
+  - id: twine-check
+    name: twine check [on bumpversion]
     entry: bash -c '
+      set -e;
       if [ "${BUMPVERSION_NEW_VERSION+x}" = "" ]; then
-        echo skipped;
+        echo "$(tput setaf 6) Skipped, only runs when bumping version $(tput sgr0)";
       else
-        ./setup.py bdist_wheel;
+        python3 -m build --wheel;
         twine check dist/*.whl;
       fi'
     language: system
     pass_filenames: false
     verbose: true
 
-  - name: tox
-    id: tox --parallel
+  - id: tox
+    name: tox --parallel
     entry: tox --parallel
+    stages: [pre-push]
     language: system
     pass_filenames: false
     verbose: true
 
-  - name: coverage
-    id: ./setup.py test_coverage
-    entry: ./setup.py test_coverage
+  - id: coverage
+    name: pytest -v -s --cov --cov-report=term --cov-report=html
+    entry: pytest -v -s --cov --cov-report=term --cov-report=html
+    stages: [pre-push]
     language: system
     pass_filenames: false
     verbose: true

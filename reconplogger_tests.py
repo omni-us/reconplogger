@@ -2,7 +2,6 @@
 
 import logging
 import os
-import reconplogger
 import random
 import shutil
 import sys
@@ -12,10 +11,12 @@ import unittest
 import uuid
 from contextlib import ExitStack, contextmanager
 from io import StringIO
-from unittest.mock import patch
 from typing import Iterator
+from unittest.mock import patch
 
-from testfixtures import LogCapture, compare, Comparison
+from testfixtures import Comparison, LogCapture, compare
+
+import reconplogger
 
 try:
     from flask import Flask, request
@@ -58,9 +59,7 @@ class TestReconplogger(unittest.TestCase):
         logger = reconplogger.logger_setup(level="ERROR", reload=True)
         self.assertEqual(logger.handlers[0].level, logging.ERROR)
         with patch.dict(os.environ, {"LOGGER_LEVEL": "WARNING"}):
-            logger = reconplogger.logger_setup(
-                level="INFO", env_prefix="LOGGER", reload=True
-            )
+            logger = reconplogger.logger_setup(level="INFO", env_prefix="LOGGER", reload=True)
             self.assertEqual(logger.handlers[0].level, logging.WARNING)
 
     def test_default_logger_with_exception(self):
@@ -101,32 +100,22 @@ class TestReconplogger(unittest.TestCase):
         self.assertNotEqual(logger.handlers, handlers1)
         self.assertNotEqual(logger.handlers, handlers2)
 
-        reconplogger.replace_logger_handlers(
-            "test_replace_logger_handlers", "plain_logger"
-        )
+        reconplogger.replace_logger_handlers("test_replace_logger_handlers", "plain_logger")
         self.assertEqual(logger.handlers, handlers1)
         self.assertNotEqual(logger.handlers, handlers2)
 
-        reconplogger.replace_logger_handlers(
-            "test_replace_logger_handlers", "json_logger"
-        )
+        reconplogger.replace_logger_handlers("test_replace_logger_handlers", "json_logger")
         self.assertEqual(logger.handlers, handlers2)
         self.assertNotEqual(logger.handlers, handlers1)
 
-        self.assertRaises(
-            ValueError, lambda: reconplogger.replace_logger_handlers(logger, False)
-        )
-        self.assertRaises(
-            ValueError, lambda: reconplogger.replace_logger_handlers(False, False)
-        )
+        self.assertRaises(ValueError, lambda: reconplogger.replace_logger_handlers(logger, False))
+        self.assertRaises(ValueError, lambda: reconplogger.replace_logger_handlers(False, False))
 
     def test_init_messages(self):
         logger = reconplogger.logger_setup(init_messages=True, reload=True)
         with self.assertLogs(logger="plain_logger", level="WARNING") as log:
             reconplogger.test_logger(logger)
-            self.assertTrue(
-                any(["WARNING" in v and "reconplogger" in v for v in log.output])
-            )
+            self.assertTrue(any(["WARNING" in v and "reconplogger" in v for v in log.output]))
 
     @patch.dict(
         os.environ,
@@ -170,9 +159,7 @@ class TestReconplogger(unittest.TestCase):
 
     def test_undefined_logger(self):
         """Test setting up a logger not already defined."""
-        self.assertRaises(
-            ValueError, lambda: reconplogger.logger_setup("undefined_logger")
-        )
+        self.assertRaises(ValueError, lambda: reconplogger.logger_setup("undefined_logger"))
 
     def test_logger_setup_invalid_level(self):
         with self.assertRaises(ValueError):
@@ -244,9 +231,7 @@ class TestReconplogger(unittest.TestCase):
             return "correlation_id=" + str(correlation_id)
 
         client = app.test_client()
-        with LogCapture(
-            names=app.logger.name, attributes=("name", "levelname")
-        ) as logs:
+        with LogCapture(names=app.logger.name, attributes=("name", "levelname")) as logs:
             response = client.get("/")
             logs.check((app.logger.name, "ERROR"))
         self.assertEqual(response.status_code, 500)
@@ -264,9 +249,7 @@ class TestReconplogger(unittest.TestCase):
         ) as logs:
             correlation_id = str(uuid.uuid4())
             response = client.get("/", headers={"Correlation-ID": correlation_id})
-            self.assertEqual(
-                response.data.decode("utf-8"), "correlation_id=" + correlation_id
-            )
+            self.assertEqual(response.data.decode("utf-8"), "correlation_id=" + correlation_id)
             logs.check(
                 (app.logger.name, "INFO", flask_msg, correlation_id),
                 (app.logger.name, "INFO", "Request completed", correlation_id),
@@ -290,9 +273,7 @@ class TestReconplogger(unittest.TestCase):
         ) as logs:
             correlation_id = str(uuid.uuid4())
             response = client.get("/?id=" + correlation_id)
-            self.assertEqual(
-                response.data.decode("utf-8"), "correlation_id=" + correlation_id
-            )
+            self.assertEqual(response.data.decode("utf-8"), "correlation_id=" + correlation_id)
             logs.check(
                 (app.logger.name, "INFO", flask_msg, correlation_id),
                 (app.logger.name, "INFO", "Request completed", correlation_id),
@@ -351,9 +332,7 @@ class TestReconplogger(unittest.TestCase):
         self.assertTrue(any([debug_msg in line for line in open(log_file).readlines()]))
 
         log_file = os.path.join(tmpdir, "file2.log")
-        logger = reconplogger.logger_setup(
-            logger_name="plain_logger", level="DEBUG", reload=True
-        )
+        logger = reconplogger.logger_setup(logger_name="plain_logger", level="DEBUG", reload=True)
         reconplogger.add_file_handler(logger, file_path=log_file, level="ERROR")
         self.assertEqual(logger.handlers[0].level, logging.DEBUG)
         self.assertEqual(logger.handlers[1].level, logging.ERROR)
@@ -361,15 +340,11 @@ class TestReconplogger(unittest.TestCase):
         logger.debug(debug_msg)
         logger.handlers[1].close()
         self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
-        self.assertFalse(
-            any([debug_msg in line for line in open(log_file).readlines()])
-        )
+        self.assertFalse(any([debug_msg in line for line in open(log_file).readlines()]))
 
         self.assertRaises(
             ValueError,
-            lambda: reconplogger.add_file_handler(
-                logger, file_path=log_file, level="INVALID"
-            ),
+            lambda: reconplogger.add_file_handler(logger, file_path=log_file, level="INVALID"),
         )
 
         shutil.rmtree(tmpdir)

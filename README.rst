@@ -272,12 +272,12 @@ example of use is the following:
     from reconplogger import RLoggerProperty
 
     class MyClass(RLoggerProperty):
-        def __init__(self, logger):
-            self.rlogger = logger
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
         def my_method(self):
             self.rlogger.error('my_method was called')
 
-    MyClass(logger=True).my_method()
+    MyClass(rlogger=True).my_method()
 
 
 Overriding logging configuration
@@ -406,9 +406,9 @@ production system.
 
 .. code-block:: bash
 
-    tox  # Run tests using tox
-    ./setup.py test_coverage  # Run tests and generate coverage report
-    python3 -m reconplogger_tests  # Run tests for installed package
+    tox                             # Run tests using tox
+    pytest --cov --cov-report=html  # Run tests and generate coverage report
+    python3 -m reconplogger_tests   # Run tests for installed package
 
 
 Pull requests
