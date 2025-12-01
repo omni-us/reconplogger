@@ -12,7 +12,7 @@ from typing import Optional, Union
 import pythonjsonlogger
 import yaml
 
-__version__ = "4.18.0"
+__version__ = "4.18.1"
 
 
 flask_requests_patch = False
