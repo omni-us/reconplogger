@@ -15,7 +15,8 @@ import yaml
 __version__ = "4.18.0"
 
 
-try:
+flask_requests_patch = False
+if find_spec("flask") and find_spec("requests"):
     # If flask is installed import the request context objects
     # If requests is installed patch the calls to add the correlation id
     import requests
@@ -31,8 +32,8 @@ try:
 
     setattr(requests.sessions.Session, "request_orig", requests.sessions.Session.request)
     requests.sessions.Session.request = _request_patch
-except ImportError:  # pragma: no cover
-    pass
+    flask_requests_patch = True
+
 
 reconplogger_format = "%(asctime)s\t%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s"
 
@@ -443,7 +444,7 @@ class _CorrelationIdLoggingFilter(logging.Filter):
         correlation_id = current_correlation_id.get()
         if correlation_id is not None:
             record.correlation_id = correlation_id
-        elif find_spec("flask") and has_request_context():
+        elif flask_requests_patch and has_request_context():
             record.correlation_id = g.correlation_id
         return True
 
