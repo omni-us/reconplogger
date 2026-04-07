@@ -317,6 +317,34 @@ class TestReconplogger(unittest.TestCase):
 
         server.shutdown()
 
+    @unittest.skipIf(not Flask, "flask package is required")
+    @unittest.skipIf(not requests, "requests package is required")
+    def test_requests_patch_uses_flask_fallback_correlation_id(self):
+        """When ContextVar is unset, requests patch uses flask.g.correlation_id."""
+        app = Flask(__name__)
+        session = requests.sessions.Session()
+        expected_correlation_id = str(uuid.uuid4())
+        expected_response = object()
+
+        with patch.object(
+            requests.sessions.Session,
+            "request_orig",
+            autospec=True,
+            return_value=expected_response,
+        ) as request_orig:
+            with app.test_request_context("/"):
+                # Force the fallback path: no ContextVar value, only flask.g value.
+                reconplogger.current_correlation_id.set(None)
+                reconplogger.g.correlation_id = expected_correlation_id
+
+                response = session.request("GET", "http://example.com")
+
+        self.assertIs(response, expected_response)
+        self.assertEqual(
+            request_orig.call_args.kwargs["headers"]["Correlation-ID"],
+            expected_correlation_id,
+        )
+
     def test_add_file_handler(self):
         """Test the use of add_file_handler."""
         tmpdir = tempfile.mkdtemp(prefix="_reconplogger_test_")
