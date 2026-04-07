@@ -42,7 +42,15 @@ def capture_logs(logger: logging.Logger) -> Iterator[StringIO]:
 
 class TestReconplogger(unittest.TestCase):
     def setUp(self):
+        root = logging.getLogger()
+        self._root_handlers = list(root.handlers)
+        self._root_level = root.level
         reconplogger.reset_configs()
+
+    def tearDown(self):
+        root = logging.getLogger()
+        root.handlers = self._root_handlers
+        root.setLevel(self._root_level)
 
     def test_default_logger(self):
         """Test load config with the default config and plain logger."""
@@ -399,12 +407,17 @@ class TestReconplogger(unittest.TestCase):
         self.assertEqual(myclass.rlogger, logger)
 
     def test_reset_configs(self):
-        """reset_configs() clears loaded config state and primary logger."""
+        """reset_configs() clears reconplogger state without touching the root logger."""
+        root = logging.getLogger()
+        original_handlers = list(root.handlers)
+        original_level = root.level
         reconplogger.logger_setup()  # populates _primary_logger
         self.assertIsNotNone(reconplogger._primary_logger)
         reconplogger.reset_configs()
         self.assertIsNone(reconplogger._primary_logger)
         self.assertEqual(reconplogger.configs_loaded, set())
+        self.assertEqual(root.handlers, original_handlers)
+        self.assertEqual(root.level, original_level)
 
     def test_logger_setup_singleton(self):
         """Subsequent calls to logger_setup return the same primary logger."""

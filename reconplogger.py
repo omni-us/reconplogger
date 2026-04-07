@@ -13,6 +13,18 @@ import yaml
 
 __version__ = "4.19.0"
 
+__all__ = [
+    "RLoggerProperty",
+    "logger_setup",
+    "flask_app_logger_setup",
+    "get_correlation_id",
+    "set_correlation_id",
+    "correlation_id_context",
+    "flask_request_completed_skip_endpoints",
+    "add_file_handler",
+    "null_logger",
+]
+
 
 if find_spec("flask"):
     from flask import g, request
@@ -108,17 +120,14 @@ _primary_logger: Optional[logging.Logger] = None
 
 
 def reset_configs():
-    """Resets the loaded configuration state and primary logger.
+    """Resets reconplogger's internal configuration state.
 
-    Intended for use in tests to restore a clean state between test cases.
+    Clears the cached loaded configurations and the singleton primary logger so
+    logging can be configured again from scratch.
     """
     global configs_loaded, _primary_logger
     configs_loaded = set()
     _primary_logger = None
-    # Reset root logger handlers and level to avoid cross-test contamination
-    root = logging.getLogger()
-    root.handlers = []
-    root.setLevel(logging.WARNING)
 
 
 def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
