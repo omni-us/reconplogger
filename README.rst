@@ -22,6 +22,8 @@ The package contains essentially the following things:
 - A default logging configuration.
 - A function for loading logging configuration for regular python code.
 - A function for loading logging configuration for flask-based microservices.
+- Root logger configuration via ``LOGGER_ROOT_HANDLER`` so third-party library logs are also captured.
+- Automatic correlation ID management in Flask services via ``flask_app_logger_setup``.
 - An inheritable class to add a logger property.
 - A context manager to set and get the correlation id.
 - Lower level functions for:
