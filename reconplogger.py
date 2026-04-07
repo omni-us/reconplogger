@@ -2,7 +2,6 @@ import datetime
 import logging
 import logging.config
 import os
-import time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from importlib.util import find_spec
@@ -12,25 +11,48 @@ from typing import Optional, Union
 import pythonjsonlogger
 import yaml
 
-__version__ = "4.18.1"
+__version__ = "4.19.0"
 
+__all__ = [
+    "RLoggerProperty",
+    "logger_setup",
+    "flask_app_logger_setup",
+    "get_correlation_id",
+    "set_correlation_id",
+    "correlation_id_context",
+    "flask_request_completed_skip_endpoints",
+    "add_file_handler",
+    "null_logger",
+]
+
+
+if find_spec("flask"):
+    from flask import g, request
 
 flask_requests_patch = False
-if find_spec("flask") and find_spec("requests"):
-    # If flask is installed import the request context objects
-    # If requests is installed patch the calls to add the correlation id
+if find_spec("requests"):
+    # Patch requests to forward the correlation ID on every outbound call.
+    # Flask fallback (g.correlation_id) is used only when flask is installed and
+    # a request context is active; otherwise current_correlation_id is used directly.
     import requests
-    from flask import g, has_request_context, request
 
     def _request_patch(slf, *args, **kwargs):
-        headers = kwargs.pop("headers", {})
-        if has_request_context() and g.correlation_id:
-            headers["Correlation-ID"] = g.correlation_id
-        elif current_correlation_id.get() is not None:
-            headers["Correlation-ID"] = current_correlation_id.get()
+        headers = kwargs.pop("headers", {}) or {}
+        correlation_id = current_correlation_id.get()
+        if correlation_id is None and find_spec("flask"):
+            try:
+                from flask import g as _g
+                from flask import has_request_context as _hrc
+
+                if _hrc() and hasattr(_g, "correlation_id"):
+                    correlation_id = _g.correlation_id
+            except Exception:
+                pass
+        if correlation_id:
+            headers["Correlation-ID"] = correlation_id
         return slf.request_orig(*args, **kwargs, headers=headers)
 
-    setattr(requests.sessions.Session, "request_orig", requests.sessions.Session.request)
+    requests.sessions.Session.request_orig = requests.sessions.Session.request
     requests.sessions.Session.request = _request_patch
     flask_requests_patch = True
 
@@ -92,6 +114,20 @@ null_logger = logging.Logger("null")
 null_logger.addHandler(logging.NullHandler())
 
 configs_loaded = set()
+
+# Internal state for singleton primary logger
+_primary_logger: Optional[logging.Logger] = None
+
+
+def reset_configs():
+    """Resets reconplogger's internal configuration state.
+
+    Clears the cached loaded configurations and the singleton primary logger so
+    logging can be configured again from scratch.
+    """
+    global configs_loaded, _primary_logger
+    configs_loaded = set()
+    _primary_logger = None
 
 
 def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
@@ -228,10 +264,14 @@ def logger_setup(
     level: Optional[str] = None,
     env_prefix: str = "LOGGER",
     reload: bool = False,
-    parent: Optional[logging.Logger] = None,
     init_messages: bool = False,
 ) -> logging.Logger:
     """Sets up logging configuration and returns the logger.
+
+    If the environment variable ``{env_prefix}_HANDLER`` is set to the name of a handler
+    defined in the logging config, that handler is installed on the root logger so that
+    all third-party loggers (which propagate to the root by default) are also captured.
+    On subsequent calls the same primary logger is returned without reconfiguring the root.
 
     Args:
         logger_name:  Name of the logger that needs to be used.
@@ -239,17 +279,28 @@ def logger_setup(
         level: Optional logging level that overrides one in config.
         env_prefix: Environment variable names prefix for overriding logger configuration.
         reload: Whether to reload logging configuration overriding any previous settings.
-        parent: Set for logging delegation to the parent.
         init_messages: Whether to log init and test messages.
 
     Returns:
         The logger object.
     """
+    global _primary_logger
+
     if not isinstance(env_prefix, str) or not env_prefix:
         raise ValueError("env_prefix is required to be a non-empty string.")
     env_cfg = env_prefix + "_CFG"
     env_name = env_prefix + "_NAME"
     env_level = env_prefix + "_LEVEL"
+    env_root_handler = env_prefix + "_ROOT_HANDLER"
+
+    # Return primary logger on subsequent calls (singleton behaviour)
+    if _primary_logger is not None and not reload:
+        name = os.getenv(env_name, logger_name)
+        if name != _primary_logger.name or config or level or init_messages:
+            _primary_logger.debug(
+                "logger_setup called again with different arguments; returning existing primary logger."
+            )
+        return _primary_logger
 
     # Configure logging
     load_config(os.getenv(env_cfg, config), reload=reload)
@@ -257,27 +308,31 @@ def logger_setup(
     # Get logger
     name = os.getenv(env_name, logger_name)
     logger = get_logger(name)
-    if getattr(logger, "_reconplogger_setup", False) and not reload:
-        if parent or level or init_messages:
-            logger.debug(f"logger {name} already setup by reconplogger, ignoring overriding parameters.")
-        return logger
 
-    # Override parent
-    logger.parent = parent
-
-    # Override log level if set
+    # Resolve the effective log level
+    effective_level: Optional[int] = None
     if env_level in os.environ:
         level = os.getenv(env_level)
     if level:
         if isinstance(level, str):
             if level not in logging_levels:
                 raise ValueError('Invalid logging level: "' + str(level) + '".')
-            level = logging_levels[level]
+            effective_level = logging_levels[level]
         else:
             raise ValueError("Expected level argument to be a string.")
-        for handler in logger.handlers:
-            if not isinstance(handler, logging.FileHandler):
-                handler.setLevel(level)
+
+    # Configure root logger when LOGGER_ROOT_HANDLER env var is set
+    root_handler_name = os.getenv(env_root_handler)
+    if root_handler_name:
+        # _configure_root_logger installs the root handler and clears all named
+        # loggers' handlers so records flow through the single root handler.
+        _configure_root_logger(root_handler_name, effective_level)
+    else:
+        # Apply log level overrides to the named logger's handlers
+        if effective_level is not None:
+            for handler in logger.handlers:
+                if not isinstance(handler, logging.FileHandler):
+                    handler.setLevel(effective_level)
 
     # Add correlation id filter
     logger.addFilter(_CorrelationIdLoggingFilter())
@@ -288,7 +343,43 @@ def logger_setup(
         test_logger(logger)
 
     logger._reconplogger_setup = True
+    _primary_logger = logger
     return logger
+
+
+def _configure_root_logger(handler_name: str, level: Optional[int]) -> None:
+    """Installs a named handler on the root logger and clears all named loggers.
+
+    After this call every log record in the process flows through the single
+    root handler, regardless of which named logger emitted it.  All named
+    loggers (except ``null_logger``) have their handlers removed and
+    ``propagate`` set to ``True`` so records bubble up to the root.
+
+    Args:
+        handler_name: Name of the handler as defined in the logging config (e.g. ``json_handler``).
+        level: Optional numeric log level; falls back to the handler's own level.
+    """
+    # Retrieve the already-configured handler by name
+    assert logging.root.manager.loggerDict  # just to verify config is loaded
+    handler_obj = logging._handlers.get(handler_name)  # type: ignore[attr-defined]
+    if handler_obj is None:
+        raise ValueError(
+            f'Handler "{handler_name}" not found in the logging configuration. '
+            "Ensure the handler is defined in the config before setting LOGGER_ROOT_HANDLER."
+        )
+
+    root = logging.getLogger()
+    root.handlers = [handler_obj]
+    effective_level = level if level is not None else handler_obj.level
+    root.setLevel(effective_level)
+
+    logging.captureWarnings(True)
+
+    # Clear handlers from all named loggers so nothing duplicates the root output.
+    for lg_obj in logging.Logger.manager.loggerDict.values():
+        if isinstance(lg_obj, logging.Logger) and lg_obj.name != "null_logger":
+            lg_obj.handlers = []
+            lg_obj.propagate = True
 
 
 flask_request_completed_skip_endpoints = set()
@@ -300,7 +391,6 @@ def flask_app_logger_setup(
     config: Optional[str] = None,
     level: Optional[str] = None,
     env_prefix: str = "LOGGER",
-    parent: Optional[logging.Logger] = None,
 ) -> logging.Logger:
     """Sets up logging configuration, configures flask to use it, and returns the logger.
 
@@ -310,7 +400,6 @@ def flask_app_logger_setup(
         config: Configuration string or path to configuration file or configuration file via environment variable.
         level: Optional logging level that overrides one in config.
         env_prefix: Environment variable names prefix for overriding logger configuration.
-        parent: Set for logging delegation to the parent.
 
     Returns:
         The logger object.
@@ -321,45 +410,31 @@ def flask_app_logger_setup(
         config=config,
         level=level,
         env_prefix=env_prefix,
-        parent=parent,
     )
-    is_json_logger = logger.handlers[0].formatter.__class__.__name__ == "JsonFormatter"
+
+    # Apply WSGI middleware to manage correlation ID at the transport layer
+    flask_app.wsgi_app = CorrelationIdWsgiMiddleware(flask_app.wsgi_app)
 
     # Setup flask logger
     replace_logger_handlers(flask_app.logger, logger)
     flask_app.logger.setLevel(logger.level)
-    flask_app.logger.parent = logger.parent
 
     # Add flask before and after request functions to augment the logs
     def _flask_logging_before_request():
-        g.correlation_id = request.headers.get("Correlation-ID", None)  # pylint: disable=assigning-non-slot
-        g.start_time = time.time()  # pylint: disable=assigning-non-slot
+        # current_correlation_id is already set by CorrelationIdWsgiMiddleware;
+        # mirror it into g for compatibility with set_correlation_id / get_correlation_id.
+        g.correlation_id = current_correlation_id.get()  # pylint: disable=assigning-non-slot
 
     flask_app.before_request_funcs.setdefault(None, []).append(_flask_logging_before_request)
 
     def _flask_logging_after_request(response):
-        if g.correlation_id:
-            response.headers.set("Correlation-ID", g.correlation_id)
+        # Correlation-ID response header is injected by CorrelationIdWsgiMiddleware.
         if request.path not in flask_request_completed_skip_endpoints:
-            if is_json_logger:
-                message = "Request completed"
-            else:
-                message = (
-                    f"{request.remote_addr} {request.method} {request.path} "
-                    f'{request.environ.get("SERVER_PROTOCOL")} {response.status_code}'
-                )
-            flask_app.logger.info(
-                message,
-                extra={
-                    "http_endpoint": request.path,
-                    "http_method": request.method,
-                    "http_response_code": response.status_code,
-                    "http_response_size": response.calculate_content_length(),
-                    "http_input_payload_size": request.content_length or 0,
-                    "http_input_payload_type": request.content_type or "",
-                    "http_response_time_ms": f"{1000*(time.time() - g.start_time):.0f}",
-                },
+            message = (
+                f"{request.remote_addr} {request.method} {request.path} "
+                f"{request.environ.get('SERVER_PROTOCOL')} {response.status_code}"
             )
+            flask_app.logger.info(message)
 
         return response
 
@@ -373,12 +448,46 @@ def flask_app_logger_setup(
     werkzeug_logger = logging.getLogger("werkzeug")
     replace_logger_handlers(werkzeug_logger, logger)
     werkzeug_logger.setLevel(max(logger.level, WARNING))
-    werkzeug_logger.parent = logger.parent
     import werkzeug._internal
 
     werkzeug._internal._logger = werkzeug_logger
 
     return logger
+
+
+if find_spec("flask"):
+
+    class CorrelationIdWsgiMiddleware:
+        """WSGI middleware that manages the correlation ID for Flask applications.
+
+        Wraps the Flask WSGI app to:
+        - Extract the ``Correlation-ID`` header from the incoming request (or leave it as ``None``).
+        - Store it in :data:`current_correlation_id` for the duration of the request.
+        - Inject the ``Correlation-ID`` into the response headers when one is present.
+
+        Applied automatically by :func:`flask_app_logger_setup`.  Can also be applied
+        manually::
+
+            from reconplogger import CorrelationIdWsgiMiddleware
+            app.wsgi_app = CorrelationIdWsgiMiddleware(app.wsgi_app)
+        """
+
+        def __init__(self, wsgi_app):
+            self._app = wsgi_app
+
+        def __call__(self, environ, start_response):
+            correlation_id = environ.get("HTTP_CORRELATION_ID")
+            token = current_correlation_id.set(correlation_id)
+
+            def _start_response(status, headers, exc_info=None):
+                if correlation_id:
+                    headers = list(headers) + [("Correlation-ID", correlation_id)]
+                return start_response(status, headers, exc_info)
+
+            try:
+                return self._app(environ, _start_response)
+            finally:
+                current_correlation_id.reset(token)
 
 
 def get_correlation_id() -> str:
@@ -444,8 +553,15 @@ class _CorrelationIdLoggingFilter(logging.Filter):
         correlation_id = current_correlation_id.get()
         if correlation_id is not None:
             record.correlation_id = correlation_id
-        elif flask_requests_patch and has_request_context():
-            record.correlation_id = g.correlation_id
+        elif find_spec("flask"):
+            try:
+                from flask import g as _g
+                from flask import has_request_context as _hrc
+
+                if _hrc() and hasattr(_g, "correlation_id"):
+                    record.correlation_id = _g.correlation_id
+            except Exception:
+                pass
         return True
 
 

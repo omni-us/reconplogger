@@ -104,7 +104,7 @@ Additional to the previous case, this function:
 
 - Replaces the flask app and werkzeug loggers to use a reconplogger configured one.
 - Add to the logs the correlation_id
-- Add before and after request functions to log the request details when the request is processed
+- Add before and after request functions to log request completion in access-log style
 - Patch the *requests* library forwarding the correlation id in any call to other microservices
 
 **What is the correlation ID?**
@@ -176,7 +176,13 @@ environment variables should be set as:
 
     LOGGER_CFG:
     LOGGER_NAME: json_logger
-    LOGGER_LEVEL: DEBUG
+    LOGGER_LEVEL: INFO
+    LOGGER_ROOT_HANDLER: json_handler
+
+Setting ``LOGGER_ROOT_HANDLER`` is the recommended way to ensure that log records
+from third-party libraries (SQLAlchemy, werkzeug, urllib3, etc.) are also
+captured and formatted as JSON.  See `Capturing third-party library logs`_ below
+for details.
 
 With the ``json_logger`` logger, the format of the logs should look something
 like the following::
@@ -186,11 +192,49 @@ like the following::
     {"asctime": "2018-09-05 17:38:38,137", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 13, "message": "Hello world"}
     {"asctime": "2018-09-05 17:38:38,137", "levelname": "CRITICAL", "filename": "test_formatter.py", "lineno": 17, "message": "Hello world"}
     {"asctime": "2018-09-05 17:38:38,137", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 25, "message": "division by zero"}
-    {"asctime": "2018-09-05 17:38:38,138", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 33, "message": "Exception has occured", "exc_info": "Traceback (most recent call last):\n  File \"reconplogger/tests/test_formatter.py\", line 31, in test_exception_with_trace\n    b = 100 / 0\nZeroDivisionError: division by zero"}
+    {"asctime": "2018-09-05 17:38:38,138", "levelname": "ERROR", "filename": "test_formatter.py", "lineno": 33, "message": "Exception has occurred", "exc_info": "Traceback (most recent call last):\n  File \"reconplogger/tests/test_formatter.py\", line 31, in test_exception_with_trace\n    b = 100 / 0\nZeroDivisionError: division by zero"}
     {"asctime": "2018-09-05 17:38:38,138", "levelname": "INFO", "filename": "test_formatter.py", "lineno": 37, "message": "Hello world", "context check": "check"}
 
     {"asctime": "2020-09-02 17:20:16,428", "levelname": "INFO", "filename": "hello.py", "lineno": 12, "message": "i like logs", "correlation_id": "3958f378-5d48-4e1c-b83b-3c6d9f95faec"}
-    {"asctime": "2020-09-02 17:20:16,428", "levelname": "INFO", "filename": "reconplogger.py", "lineno": 271, "message": "Request is completed", "http_endpoint": "/", "http_method": "GET", "http_response_code": 200, "http_response_size": 56, "http_input_payload_size": null, "http_input_payload_type": null, "http_response_time": "0.0002014636993408203", "correlation_id": "3958f378-5d48-4e1c-b83b-3c6d9f95faec"}
+    {"asctime": "2020-09-02 17:20:16,428", "levelname": "INFO", "filename": "reconplogger.py", "lineno": 271, "message": "127.0.0.1 GET / HTTP/1.1 200", "correlation_id": "3958f378-5d48-4e1c-b83b-3c6d9f95faec"}
+
+
+Capturing third-party library logs
+-----------------------------------
+
+By default reconplogger only configures the named logger returned by
+:func:`~reconplogger.logger_setup`.  Third-party libraries (SQLAlchemy, werkzeug,
+urllib3, httpx, …) create their own named loggers that propagate records up to
+Python's **root logger**, which reconplogger does not touch unless instructed to.
+
+To capture every log record in the process under the same handler — with no code
+changes — set the ``{env_prefix}_ROOT_HANDLER`` environment variable to the name
+of the handler you want to use as the single root handler:
+
+.. code-block:: bash
+
+    LOGGER_NAME=json_logger
+    LOGGER_LEVEL=INFO
+    LOGGER_ROOT_HANDLER=json_handler   # new
+
+When ``LOGGER_ROOT_HANDLER`` is set:
+
+1. The named handler is installed on the **root logger**.
+2. The root logger's level is set to ``LOGGER_LEVEL`` (or the handler's
+   own level if ``LOGGER_LEVEL`` is absent).
+3. ``logging.captureWarnings(True)`` is called so ``warnings.warn(...)``
+   calls are also captured.
+4. The named logger (e.g. ``json_logger``) has its handlers cleared and
+   ``propagate=True`` set so records flow to the single root handler without
+   duplication.
+5. All other named loggers in the config also have their handlers cleared for
+   the same reason.
+6. Subsequent calls to :func:`~reconplogger.logger_setup` return the same
+   primary logger (singleton behaviour).
+
+
+``flask_app_logger_setup`` manages correlation ID handling internally for Flask,
+including request lifecycle setup and response header propagation.
 
 
 Use of the logger object
@@ -376,6 +420,18 @@ also installed with the package, thus can be used to in a production system.
     tox                             # Run tests using tox
     pytest --cov --cov-report=html  # Run tests and generate coverage report
     python3 -m reconplogger_tests   # Run tests for installed package
+
+When writing tests that call :func:`~reconplogger.logger_setup`, call
+:func:`~reconplogger.reset_configs` in ``setUp`` / ``tearDown`` to restore a
+clean state between test cases:
+
+.. code-block:: python
+
+    import reconplogger
+
+    class MyTest(unittest.TestCase):
+        def setUp(self):
+            reconplogger.reset_configs()
 
 
 Pull requests

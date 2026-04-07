@@ -6,7 +6,7 @@ default_language_version:
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: check-added-large-files
   - id: check-ast
@@ -17,16 +17,18 @@ repos:
   - id: trailing-whitespace
     exclude: .bumpversion.cfg
 
-- repo: https://github.com/psf/black
-  rev: 25.1.0
-  hooks:
-  - id: black
-
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.12.5
+  rev: v0.15.9
   hooks:
-  - id: ruff
-    args: ["--fix"]
+  - id: ruff-check
+  - id: ruff-format
+
+- repo: https://github.com/crate-ci/typos
+  rev: v1.45.0
+  hooks:
+  - id: typos
+    args: []
+    verbose: true
 
 - repo: local
   hooks:

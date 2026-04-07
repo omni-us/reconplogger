@@ -34,14 +34,23 @@ def capture_logs(logger: logging.Logger) -> Iterator[StringIO]:
     with ExitStack() as stack:
         captured = StringIO()
         for handler in logger.handlers:
-            if isinstance(handler, logging.StreamHandler):
+            # FileHandler subclasses StreamHandler — exclude it so it still writes to disk
+            if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
                 stack.enter_context(patch.object(handler, "stream", captured))
         yield captured
 
 
 class TestReconplogger(unittest.TestCase):
     def setUp(self):
-        reconplogger.configs_loaded = set()
+        root = logging.getLogger()
+        self._root_handlers = list(root.handlers)
+        self._root_level = root.level
+        reconplogger.reset_configs()
+
+    def tearDown(self):
+        root = logging.getLogger()
+        root.handlers = self._root_handlers
+        root.setLevel(self._root_level)
 
     def test_default_logger(self):
         """Test load config with the default config and plain logger."""
@@ -56,8 +65,10 @@ class TestReconplogger(unittest.TestCase):
         """Test load config with the default config and plain logger changing the log level."""
         logger = reconplogger.logger_setup(level="INFO", reload=True)
         self.assertEqual(logger.handlers[0].level, logging.INFO)
+        reconplogger.reset_configs()
         logger = reconplogger.logger_setup(level="ERROR", reload=True)
         self.assertEqual(logger.handlers[0].level, logging.ERROR)
+        reconplogger.reset_configs()
         with patch.dict(os.environ, {"LOGGER_LEVEL": "WARNING"}):
             logger = reconplogger.logger_setup(level="INFO", env_prefix="LOGGER", reload=True)
             self.assertEqual(logger.handlers[0].level, logging.WARNING)
@@ -93,9 +104,12 @@ class TestReconplogger(unittest.TestCase):
             log.check(("json_logger", "INFO", info_msg))
 
     def test_replace_logger_handlers(self):
+        reconplogger.load_config("reconplogger_default_cfg")
         logger = logging.getLogger("test_replace_logger_handlers")
-        handlers1 = reconplogger.logger_setup(logger_name="plain_logger").handlers
-        handlers2 = reconplogger.logger_setup(logger_name="json_logger").handlers
+        plain_logger = reconplogger.get_logger("plain_logger")
+        json_logger = reconplogger.get_logger("json_logger")
+        handlers1 = plain_logger.handlers
+        handlers2 = json_logger.handlers
 
         self.assertNotEqual(logger.handlers, handlers1)
         self.assertNotEqual(logger.handlers, handlers2)
@@ -112,10 +126,11 @@ class TestReconplogger(unittest.TestCase):
         self.assertRaises(ValueError, lambda: reconplogger.replace_logger_handlers(False, False))
 
     def test_init_messages(self):
-        logger = reconplogger.logger_setup(init_messages=True, reload=True)
-        with self.assertLogs(logger="plain_logger", level="WARNING") as log:
+        logger = reconplogger.logger_setup()
+        with capture_logs(logger) as captured:
             reconplogger.test_logger(logger)
-            self.assertTrue(any(["WARNING" in v and "reconplogger" in v for v in log.output]))
+        self.assertIn("WARNING", captured.getvalue())
+        self.assertIn("reconplogger test warning message", captured.getvalue())
 
     @patch.dict(
         os.environ,
@@ -252,7 +267,7 @@ class TestReconplogger(unittest.TestCase):
             self.assertEqual(response.data.decode("utf-8"), "correlation_id=" + correlation_id)
             logs.check(
                 (app.logger.name, "INFO", flask_msg, correlation_id),
-                (app.logger.name, "INFO", "Request completed", correlation_id),
+                (app.logger.name, "INFO", "127.0.0.1 GET / HTTP/1.1 200", correlation_id),
             )
         # Check missing correlation id
         with LogCapture(
@@ -264,7 +279,7 @@ class TestReconplogger(unittest.TestCase):
             self.assertIsNone(correlation_id)
             logs.check(
                 (app.logger.name, "INFO", flask_msg, correlation_id),
-                (app.logger.name, "INFO", "Request completed", correlation_id),
+                (app.logger.name, "INFO", "127.0.0.1 GET / HTTP/1.1 200", correlation_id),
             )
         # Check set correlation id
         with LogCapture(
@@ -276,18 +291,20 @@ class TestReconplogger(unittest.TestCase):
             self.assertEqual(response.data.decode("utf-8"), "correlation_id=" + correlation_id)
             logs.check(
                 (app.logger.name, "INFO", flask_msg, correlation_id),
-                (app.logger.name, "INFO", "Request completed", correlation_id),
+                (app.logger.name, "INFO", "127.0.0.1 GET / HTTP/1.1 200", correlation_id),
             )
 
     @unittest.skipIf(not Flask, "flask package is required")
     @unittest.skipIf(not requests, "requests and werkzeug packages are required")
     def test_requests_patch(self):
+        """requests is always patched when installed — the global session forwards
+        the current correlation ID without any explicit opt-in."""
         app = Flask(__name__)
         logger = reconplogger.flask_app_logger_setup(app)
 
         @app.route("/id")
         def get_id():
-            return reconplogger.get_correlation_id()
+            return reconplogger.get_correlation_id() or ""
 
         port = random.randint(5000, 10000)
         server = make_server("localhost", port, app)
@@ -298,6 +315,7 @@ class TestReconplogger(unittest.TestCase):
         self.assertEqual(werkzeug_logger.handlers, logger.handlers)
         self.assertGreaterEqual(werkzeug_logger.level, reconplogger.WARNING)
 
+        # Plain requests.get — the global patch injects the correlation ID header
         correlation_id = str(uuid.uuid4())
         with reconplogger.correlation_id_context(correlation_id):
             response = requests.get(f"http://localhost:{port}/id")
@@ -305,14 +323,35 @@ class TestReconplogger(unittest.TestCase):
             self.assertEqual(correlation_id, response.text)
             self.assertEqual(correlation_id, response.headers["Correlation-ID"])
 
-        with app.test_request_context():
-            correlation_id = str(uuid.uuid4())
-            reconplogger.set_correlation_id(correlation_id)
-            response = requests.get(f"http://localhost:{port}/id")
-            self.assertEqual(correlation_id, response.text)
-            self.assertEqual(correlation_id, response.headers["Correlation-ID"])
-
         server.shutdown()
+
+    @unittest.skipIf(not Flask, "flask package is required")
+    @unittest.skipIf(not requests, "requests package is required")
+    def test_requests_patch_uses_flask_fallback_correlation_id(self):
+        """When ContextVar is unset, requests patch uses flask.g.correlation_id."""
+        app = Flask(__name__)
+        session = requests.sessions.Session()
+        expected_correlation_id = str(uuid.uuid4())
+        expected_response = object()
+
+        with patch.object(
+            requests.sessions.Session,
+            "request_orig",
+            autospec=True,
+            return_value=expected_response,
+        ) as request_orig:
+            with app.test_request_context("/"):
+                # Force the fallback path: no ContextVar value, only flask.g value.
+                reconplogger.current_correlation_id.set(None)
+                reconplogger.g.correlation_id = expected_correlation_id
+
+                response = session.request("GET", "http://example.com")
+
+        self.assertIs(response, expected_response)
+        self.assertEqual(
+            request_orig.call_args.kwargs["headers"]["Correlation-ID"],
+            expected_correlation_id,
+        )
 
     def test_add_file_handler(self):
         """Test the use of add_file_handler."""
@@ -325,8 +364,9 @@ class TestReconplogger(unittest.TestCase):
         reconplogger.add_file_handler(logger, file_path=log_file, level="DEBUG")
         self.assertEqual(logger.handlers[0].level, logging.ERROR)
         self.assertEqual(logger.handlers[1].level, logging.DEBUG)
-        logger.error(error_msg)
-        logger.debug(debug_msg)
+        with capture_logs(logger):
+            logger.error(error_msg)
+            logger.debug(debug_msg)
         logger.handlers[1].close()
         self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
         self.assertTrue(any([debug_msg in line for line in open(log_file).readlines()]))
@@ -336,8 +376,9 @@ class TestReconplogger(unittest.TestCase):
         reconplogger.add_file_handler(logger, file_path=log_file, level="ERROR")
         self.assertEqual(logger.handlers[0].level, logging.DEBUG)
         self.assertEqual(logger.handlers[1].level, logging.ERROR)
-        logger.error(error_msg)
-        logger.debug(debug_msg)
+        with capture_logs(logger):
+            logger.error(error_msg)
+            logger.debug(debug_msg)
         logger.handlers[1].close()
         self.assertTrue(any([error_msg in line for line in open(log_file).readlines()]))
         self.assertFalse(any([debug_msg in line for line in open(log_file).readlines()]))
@@ -364,6 +405,82 @@ class TestReconplogger(unittest.TestCase):
         logger = logging.Logger("test_logger_property")
         myclass.rlogger = logger
         self.assertEqual(myclass.rlogger, logger)
+
+    def test_reset_configs(self):
+        """reset_configs() clears reconplogger state without touching the root logger."""
+        root = logging.getLogger()
+        original_handlers = list(root.handlers)
+        original_level = root.level
+        reconplogger.logger_setup()  # populates _primary_logger
+        self.assertIsNotNone(reconplogger._primary_logger)
+        reconplogger.reset_configs()
+        self.assertIsNone(reconplogger._primary_logger)
+        self.assertEqual(reconplogger.configs_loaded, set())
+        self.assertEqual(root.handlers, original_handlers)
+        self.assertEqual(root.level, original_level)
+
+    def test_logger_setup_singleton(self):
+        """Subsequent calls to logger_setup return the same primary logger."""
+        logger1 = reconplogger.logger_setup(logger_name="plain_logger")
+        logger2 = reconplogger.logger_setup(logger_name="json_logger")
+        self.assertIs(logger1, logger2)
+
+    @patch.dict(
+        os.environ,
+        {
+            "LOGGER_NAME": "json_logger",
+            "LOGGER_ROOT_HANDLER": "json_handler",
+            "LOGGER_LEVEL": "INFO",
+        },
+    )
+    def test_root_logger_handler(self):
+        """When LOGGER_ROOT_HANDLER is set, the root logger receives the handler and
+        named loggers propagate to it without handlers of their own."""
+        logger = reconplogger.logger_setup()
+        root = logging.getLogger()
+        # Root logger should have the json_handler installed
+        handler_names = [h.__class__.__name__ for h in root.handlers]
+        self.assertIn("StreamHandler", handler_names)
+        self.assertEqual(root.level, logging.INFO)
+        # Named logger should have no own handlers; records bubble up to root
+        self.assertEqual(logger.handlers, [])
+        self.assertTrue(logger.propagate)
+
+    @patch.dict(
+        os.environ,
+        {"LOGGER_ROOT_HANDLER": "nonexistent_handler"},
+    )
+    def test_root_logger_invalid_handler(self):
+        """Setting LOGGER_ROOT_HANDLER to a nonexistent handler name raises ValueError."""
+        with self.assertRaises(ValueError):
+            reconplogger.logger_setup()
+
+    @unittest.skipIf(not Flask, "flask package is required")
+    def test_wsgi_middleware(self):
+        """CorrelationIdWsgiMiddleware sets/clears current_correlation_id per request."""
+        app = Flask(__name__)
+
+        @app.route("/id")
+        def get_id():
+            cid = reconplogger.current_correlation_id.get()
+            return cid or ""
+
+        app.wsgi_app = reconplogger.CorrelationIdWsgiMiddleware(app.wsgi_app)
+        client = app.test_client()
+
+        correlation_id = str(uuid.uuid4())
+        response = client.get("/id", headers={"Correlation-ID": correlation_id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data.decode(), correlation_id)
+        self.assertEqual(response.headers.get("Correlation-ID"), correlation_id)
+
+        # Without header, empty string returned and no Correlation-ID in response
+        response = client.get("/id")
+        self.assertEqual(response.data.decode(), "")
+        self.assertIsNone(response.headers.get("Correlation-ID"))
+
+        # After request, ContextVar is reset
+        self.assertIsNone(reconplogger.current_correlation_id.get())
 
 
 def run_tests():
