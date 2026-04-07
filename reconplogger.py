@@ -11,7 +11,7 @@ from typing import Optional, Union
 import pythonjsonlogger
 import yaml
 
-__version__ = "4.19.0"
+__version__ = "5.0.0.dev1"
 
 __all__ = [
     "RLoggerProperty",
