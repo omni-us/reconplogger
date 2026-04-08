@@ -11,16 +11,17 @@ from typing import Optional, Union
 import pythonjsonlogger
 import yaml
 
-__version__ = "5.0.0.dev2"
+__version__ = "5.0.0"
 
 __all__ = [
     "RLoggerProperty",
+    "configure_root_logger",
     "logger_setup",
     "flask_app_logger_setup",
+    "flask_request_completed_skip_endpoints",
     "get_correlation_id",
     "set_correlation_id",
     "correlation_id_context",
-    "flask_request_completed_skip_endpoints",
     "add_file_handler",
     "null_logger",
 ]
@@ -307,7 +308,7 @@ def logger_setup(
             raise ValueError('Invalid logging level: "' + str(level) + '".')
         effective_level = logging_levels[level]
 
-    _configure_root_logger()
+    configure_root_logger()
 
     # Apply log level overrides to the named logger's handlers
     if effective_level is not None:
@@ -323,7 +324,7 @@ def logger_setup(
     return logger
 
 
-def _configure_root_logger() -> None:
+def configure_root_logger() -> None:
     """Installs a named handler on the root logger and removes stream handlers from named loggers.
 
     After this call every log record in the process flows through the single
