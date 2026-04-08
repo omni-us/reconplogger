@@ -63,14 +63,14 @@ class TestReconplogger(unittest.TestCase):
 
     def test_log_level(self):
         """Test load config with the default config and plain logger changing the log level."""
-        logger = reconplogger.logger_setup(level="INFO", reload=True)
+        logger = reconplogger.logger_setup(level="INFO")
         self.assertEqual(logger.handlers[0].level, logging.INFO)
         reconplogger.reset_configs()
-        logger = reconplogger.logger_setup(level="ERROR", reload=True)
+        logger = reconplogger.logger_setup(level="ERROR")
         self.assertEqual(logger.handlers[0].level, logging.ERROR)
         reconplogger.reset_configs()
         with patch.dict(os.environ, {"LOGGER_LEVEL": "WARNING"}):
-            logger = reconplogger.logger_setup(level="INFO", env_prefix="LOGGER", reload=True)
+            logger = reconplogger.logger_setup(level="INFO")
             self.assertEqual(logger.handlers[0].level, logging.WARNING)
 
     def test_default_logger_with_exception(self):
@@ -125,18 +125,20 @@ class TestReconplogger(unittest.TestCase):
         self.assertRaises(ValueError, lambda: reconplogger.replace_logger_handlers(logger, False))
         self.assertRaises(ValueError, lambda: reconplogger.replace_logger_handlers(False, False))
 
-    def test_init_messages(self):
+    def test_logger_writes_messages(self):
         logger = reconplogger.logger_setup()
         with capture_logs(logger) as captured:
-            reconplogger.test_logger(logger)
+            logger.debug("reconplogger test debug message.")
+            logger.info("reconplogger test info message.")
+            logger.warning("reconplogger test warning message.")
         self.assertIn("WARNING", captured.getvalue())
         self.assertIn("reconplogger test warning message", captured.getvalue())
 
     @patch.dict(
         os.environ,
         {
-            "RECONPLOGGER_NAME": "example_logger",
-            "RECONPLOGGER_CFG": """{
+            "LOGGER_NAME": "example_logger",
+            "LOGGER_CFG": """{
             "version": 1,
             "formatters": {
                 "verbose": {
@@ -159,18 +161,12 @@ class TestReconplogger(unittest.TestCase):
         }""",
         },
     )
-    def test_logger_setup_env_prefix(self):
-        logger = reconplogger.logger_setup(env_prefix="RECONPLOGGER")
+    def test_logger_setup_env_vars(self):
+        logger = reconplogger.logger_setup()
         info_msg = "info message env logger"
         with LogCapture(names="example_logger") as log:
             logger.info(info_msg)
             log.check(("example_logger", "INFO", info_msg))
-
-    def test_logger_setup_env_prefix_invalid(self):
-        for env_prefix in [None, ""]:
-            with self.subTest(env_prefix):
-                with self.assertRaises(ValueError):
-                    reconplogger.logger_setup(env_prefix=env_prefix)
 
     def test_undefined_logger(self):
         """Test setting up a logger not already defined."""
@@ -178,9 +174,12 @@ class TestReconplogger(unittest.TestCase):
 
     def test_logger_setup_invalid_level(self):
         with self.assertRaises(ValueError):
-            reconplogger.logger_setup(level="INVALID", reload=True)
+            reconplogger.logger_setup(level="INVALID")
         with self.assertRaises(ValueError):
-            reconplogger.logger_setup(level=True, reload=True)
+            reconplogger.logger_setup(level=True)
+        with patch.dict(os.environ, {"LOGGER_ROOT_HANDLER": "json_handler", "LOGGER_ROOT_LEVEL": "INVALID"}):
+            with self.assertRaises(ValueError):
+                reconplogger.logger_setup()
 
     @patch.dict(os.environ, {"LOGGER_NAME": "json_logger"})
     def test_correlation_id_context(self):
@@ -203,13 +202,13 @@ class TestReconplogger(unittest.TestCase):
     @patch.dict(
         os.environ,
         {
-            "RECONPLOGGER_CFG": "reconplogger_default_cfg",
-            "RECONPLOGGER_NAME": "json_logger",
+            "LOGGER_CFG": "reconplogger_default_cfg",
+            "LOGGER_NAME": "json_logger",
         },
     )
     def test_flask_app_logger_setup(self):
         app = Flask(__name__)
-        reconplogger.flask_app_logger_setup(env_prefix="RECONPLOGGER", flask_app=app)
+        reconplogger.flask_app_logger_setup(flask_app=app)
         assert app.logger.filters  # pylint: disable=no-member
         assert app.before_request_funcs
         assert app.after_request_funcs
@@ -227,8 +226,8 @@ class TestReconplogger(unittest.TestCase):
     @patch.dict(
         os.environ,
         {
-            "RECONPLOGGER_CFG": "reconplogger_default_cfg",
-            "RECONPLOGGER_NAME": "json_logger",
+            "LOGGER_CFG": "reconplogger_default_cfg",
+            "LOGGER_NAME": "json_logger",
         },
     )
     def test_flask_app_correlation_id(self):
@@ -251,7 +250,7 @@ class TestReconplogger(unittest.TestCase):
             logs.check((app.logger.name, "ERROR"))
         self.assertEqual(response.status_code, 500)
 
-        reconplogger.flask_app_logger_setup(env_prefix="RECONPLOGGER", flask_app=app)
+        reconplogger.flask_app_logger_setup(flask_app=app)
         client = app.test_client()
 
         self.assertRaises(RuntimeError, lambda: reconplogger.get_correlation_id())
@@ -372,7 +371,8 @@ class TestReconplogger(unittest.TestCase):
         self.assertTrue(any([debug_msg in line for line in open(log_file).readlines()]))
 
         log_file = os.path.join(tmpdir, "file2.log")
-        logger = reconplogger.logger_setup(logger_name="plain_logger", level="DEBUG", reload=True)
+        reconplogger.reset_configs()
+        logger = reconplogger.logger_setup(logger_name="plain_logger", level="DEBUG")
         reconplogger.add_file_handler(logger, file_path=log_file, level="ERROR")
         self.assertEqual(logger.handlers[0].level, logging.DEBUG)
         self.assertEqual(logger.handlers[1].level, logging.ERROR)
@@ -435,16 +435,88 @@ class TestReconplogger(unittest.TestCase):
     )
     def test_root_logger_handler(self):
         """When LOGGER_ROOT_HANDLER is set, the root logger receives the handler and
-        named loggers propagate to it without handlers of their own."""
+        LOGGER_LEVEL no longer changes the root logger level."""
         logger = reconplogger.logger_setup()
         root = logging.getLogger()
         # Root logger should have the json_handler installed
         handler_names = [h.__class__.__name__ for h in root.handlers]
         self.assertIn("StreamHandler", handler_names)
-        self.assertEqual(root.level, logging.INFO)
-        # Named logger should have no own handlers; records bubble up to root
+        self.assertEqual(root.level, logging.WARNING)
+        self.assertEqual(root.handlers[0].level, logging.WARNING)
+        # Named logger should have no own stream handlers; records bubble up to root
         self.assertEqual(logger.handlers, [])
         self.assertTrue(logger.propagate)
+
+    @patch.dict(
+        os.environ,
+        {
+            "LOGGER_ROOT_HANDLER": "json_handler",
+            "LOGGER_ROOT_LEVEL": "DEBUG",
+        },
+    )
+    def test_root_logger_level_emits_debug_logs(self):
+        """LOGGER_ROOT_LEVEL controls the root logger and root handler thresholds."""
+        logger = reconplogger.logger_setup()
+        root = logging.getLogger()
+        self.assertEqual(root.level, logging.DEBUG)
+        self.assertEqual(root.handlers[0].level, logging.DEBUG)
+
+        captured = StringIO()
+        with patch.object(root.handlers[0], "stream", captured):
+            logger.debug("debug message via root handler")
+
+        self.assertIn("debug message via root handler", captured.getvalue())
+
+    def test_root_logger_keeps_file_handlers(self):
+        """Root logger setup removes stream handlers from named loggers but keeps file handlers."""
+        tmpdir = tempfile.mkdtemp(prefix="_reconplogger_root_test_")
+        log_file = os.path.join(tmpdir, "root.log")
+        config = {
+            "version": 1,
+            "formatters": {
+                "plain": {
+                    "format": "%(levelname)s %(message)s",
+                }
+            },
+            "handlers": {
+                "plain_handler": {
+                    "class": "logging.StreamHandler",
+                    "formatter": "plain",
+                    "level": "WARNING",
+                },
+                "file_handler": {
+                    "class": "logging.FileHandler",
+                    "formatter": "plain",
+                    "filename": log_file,
+                    "level": "ERROR",
+                },
+            },
+            "loggers": {
+                "plain_logger": {
+                    "level": "DEBUG",
+                    "handlers": ["plain_handler", "file_handler"],
+                }
+            },
+        }
+
+        try:
+            with patch.dict(os.environ, {"LOGGER_ROOT_HANDLER": "plain_handler"}, clear=False):
+                logger = reconplogger.logger_setup(config=config)
+
+            self.assertEqual(len(logger.handlers), 1)
+            self.assertIsInstance(logger.handlers[0], logging.FileHandler)
+            self.assertTrue(logger.propagate)
+
+            captured = StringIO()
+            root = logging.getLogger()
+            with patch.object(root.handlers[0], "stream", captured):
+                logger.error("root logger keeps file handlers")
+
+            logger.handlers[0].close()
+            self.assertIn("root logger keeps file handlers", captured.getvalue())
+            self.assertTrue(any("root logger keeps file handlers" in line for line in open(log_file).readlines()))
+        finally:
+            shutil.rmtree(tmpdir)
 
     @patch.dict(
         os.environ,

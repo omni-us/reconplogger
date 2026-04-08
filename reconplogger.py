@@ -118,6 +118,12 @@ configs_loaded = set()
 # Internal state for singleton primary logger
 _primary_logger: Optional[logging.Logger] = None
 
+ENV_CFG = "LOGGER_CFG"
+ENV_NAME = "LOGGER_NAME"
+ENV_LEVEL = "LOGGER_LEVEL"
+ENV_ROOT_HANDLER = "LOGGER_ROOT_HANDLER"
+ENV_ROOT_LEVEL = "LOGGER_ROOT_LEVEL"
+
 
 def reset_configs():
     """Resets reconplogger's internal configuration state.
@@ -130,7 +136,7 @@ def reset_configs():
     _primary_logger = None
 
 
-def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
+def load_config(cfg: Optional[Union[str, dict]] = None):
     """Loads a logging configuration from path or environment variable or dictionary object.
 
     Args:
@@ -140,14 +146,14 @@ def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
     Returns:
         The logging package object.
     """
-    if (
-        cfg is None
-        or cfg in {"", "reconplogger_default_cfg"}
-        or (cfg in os.environ and os.environ[cfg] == "reconplogger_default_cfg")
-    ):
+    if cfg is None:
         cfg_dict = reconplogger_default_cfg
     elif isinstance(cfg, dict):
         cfg_dict = cfg
+    elif cfg in {"", "reconplogger_default_cfg"} or (
+        cfg in os.environ and os.environ[cfg] == "reconplogger_default_cfg"
+    ):
+        cfg_dict = reconplogger_default_cfg
     elif isinstance(cfg, str):
         try:
             if os.path.isfile(cfg):
@@ -172,7 +178,7 @@ def load_config(cfg: Optional[Union[str, dict]] = None, reload: bool = False):
     cfg_dict["disable_existing_loggers"] = False
 
     cfg_hash = yaml.safe_dump(cfg_dict).__hash__()
-    if reload or cfg_hash not in configs_loaded:
+    if cfg_hash not in configs_loaded:
         logging.config.dictConfig(cfg_dict)
         configs_loaded.add(cfg_hash)
 
@@ -234,13 +240,6 @@ def add_file_handler(
     return file_handler
 
 
-def test_logger(logger: logging.Logger):
-    """Logs one message to each debug, info and warning levels intended for testing."""
-    logger.debug("reconplogger test debug message.")
-    logger.info("reconplogger test info message.")
-    logger.warning("reconplogger test warning message.")
-
-
 def get_logger(logger_name: str) -> logging.Logger:
     """Returns an already existing logger.
 
@@ -254,7 +253,7 @@ def get_logger(logger_name: str) -> logging.Logger:
         ValueError: If the logger does not exist.
     """
     if logger_name not in logging.Logger.manager.loggerDict and logger_name not in logging.root.manager.loggerDict:
-        raise ValueError('Logger "' + str(logger_name) + '" not defined.')
+        raise ValueError(f'Logger "{logger_name}" not defined.')
     return logging.getLogger(logger_name)
 
 
@@ -262,103 +261,82 @@ def logger_setup(
     logger_name: str = "plain_logger",
     config: Optional[str] = None,
     level: Optional[str] = None,
-    env_prefix: str = "LOGGER",
-    reload: bool = False,
-    init_messages: bool = False,
 ) -> logging.Logger:
     """Sets up logging configuration and returns the logger.
 
-    If the environment variable ``{env_prefix}_HANDLER`` is set to the name of a handler
+    If the environment variable ``LOGGER_ROOT_HANDLER`` is set to the name of a handler
     defined in the logging config, that handler is installed on the root logger so that
     all third-party loggers (which propagate to the root by default) are also captured.
+    The primary logger level remains controlled by ``level`` / ``LOGGER_LEVEL``, while the
+    root logger level can be controlled independently through ``LOGGER_ROOT_LEVEL``.
     On subsequent calls the same primary logger is returned without reconfiguring the root.
+    To force a fresh configuration pass, call :func:`reset_configs` first.
 
     Args:
         logger_name:  Name of the logger that needs to be used.
         config: Configuration string or path to configuration file or configuration file via environment variable.
         level: Optional logging level that overrides one in config.
-        env_prefix: Environment variable names prefix for overriding logger configuration.
-        reload: Whether to reload logging configuration overriding any previous settings.
-        init_messages: Whether to log init and test messages.
 
     Returns:
         The logger object.
     """
     global _primary_logger
 
-    if not isinstance(env_prefix, str) or not env_prefix:
-        raise ValueError("env_prefix is required to be a non-empty string.")
-    env_cfg = env_prefix + "_CFG"
-    env_name = env_prefix + "_NAME"
-    env_level = env_prefix + "_LEVEL"
-    env_root_handler = env_prefix + "_ROOT_HANDLER"
-
     # Return primary logger on subsequent calls (singleton behaviour)
-    if _primary_logger is not None and not reload:
-        name = os.getenv(env_name, logger_name)
-        if name != _primary_logger.name or config or level or init_messages:
+    if _primary_logger is not None:
+        name = os.getenv(ENV_NAME, logger_name)
+        if name != _primary_logger.name or config or level:
             _primary_logger.debug(
                 "logger_setup called again with different arguments; returning existing primary logger."
             )
         return _primary_logger
 
     # Configure logging
-    load_config(os.getenv(env_cfg, config), reload=reload)
+    load_config(os.getenv(ENV_CFG, config))
 
     # Get logger
-    name = os.getenv(env_name, logger_name)
+    name = os.getenv(ENV_NAME, logger_name)
     logger = get_logger(name)
 
-    # Resolve the effective log level
+    # Resolve the effective log level for the primary logger
     effective_level: Optional[int] = None
-    if env_level in os.environ:
-        level = os.getenv(env_level)
+    if ENV_LEVEL in os.environ:
+        level = os.getenv(ENV_LEVEL)
     if level:
-        if isinstance(level, str):
-            if level not in logging_levels:
-                raise ValueError('Invalid logging level: "' + str(level) + '".')
-            effective_level = logging_levels[level]
-        else:
-            raise ValueError("Expected level argument to be a string.")
+        if level not in logging_levels:
+            raise ValueError('Invalid logging level: "' + str(level) + '".')
+        effective_level = logging_levels[level]
 
-    # Configure root logger when LOGGER_ROOT_HANDLER env var is set
-    root_handler_name = os.getenv(env_root_handler)
-    if root_handler_name:
-        # _configure_root_logger installs the root handler and clears all named
-        # loggers' handlers so records flow through the single root handler.
-        _configure_root_logger(root_handler_name, effective_level)
-    else:
-        # Apply log level overrides to the named logger's handlers
-        if effective_level is not None:
-            for handler in logger.handlers:
-                if not isinstance(handler, logging.FileHandler):
-                    handler.setLevel(effective_level)
+    _configure_root_logger()
+
+    # Apply log level overrides to the named logger's handlers
+    if effective_level is not None:
+        for handler in logger.handlers:
+            if not isinstance(handler, logging.FileHandler):
+                handler.setLevel(effective_level)
 
     # Add correlation id filter
     logger.addFilter(_CorrelationIdLoggingFilter())
-
-    # Log configured done and test logger
-    if init_messages:
-        logger.info("reconplogger (v" + __version__ + ") logger configured.")
-        test_logger(logger)
 
     logger._reconplogger_setup = True
     _primary_logger = logger
     return logger
 
 
-def _configure_root_logger(handler_name: str, level: Optional[int]) -> None:
-    """Installs a named handler on the root logger and clears all named loggers.
+def _configure_root_logger() -> None:
+    """Installs a named handler on the root logger and removes stream handlers from named loggers.
 
     After this call every log record in the process flows through the single
     root handler, regardless of which named logger emitted it.  All named
-    loggers (except ``null_logger``) have their handlers removed and
-    ``propagate`` set to ``True`` so records bubble up to the root.
-
-    Args:
-        handler_name: Name of the handler as defined in the logging config (e.g. ``json_handler``).
-        level: Optional numeric log level; falls back to the handler's own level.
+    loggers (except those with only ``NullHandler`` instances) have their
+    ``StreamHandler`` instances removed and ``propagate`` set to ``True`` so
+    records bubble up to the root while keeping non-stream handlers such as
+    file handlers attached.
     """
+    handler_name = os.getenv(ENV_ROOT_HANDLER)
+    if not handler_name:
+        return
+
     # Retrieve the already-configured handler by name
     assert logging.root.manager.loggerDict  # just to verify config is loaded
     handler_obj = logging._handlers.get(handler_name)  # type: ignore[attr-defined]
@@ -370,15 +348,28 @@ def _configure_root_logger(handler_name: str, level: Optional[int]) -> None:
 
     root = logging.getLogger()
     root.handlers = [handler_obj]
-    effective_level = level if level is not None else handler_obj.level
-    root.setLevel(effective_level)
+    root_level_name = os.getenv(ENV_ROOT_LEVEL)
+    level = handler_obj.level
+    if root_level_name:
+        if root_level_name not in logging_levels:
+            raise ValueError('Invalid logging level: "' + str(root_level_name) + '".')
+        level = logging_levels[root_level_name]
+    handler_obj.setLevel(level)
+    root.setLevel(level)
 
     logging.captureWarnings(True)
 
-    # Clear handlers from all named loggers so nothing duplicates the root output.
+    # Remove stream handlers from named loggers so their remaining handlers, such
+    # as FileHandler, keep working without duplicating root stream output.
     for lg_obj in logging.Logger.manager.loggerDict.values():
-        if isinstance(lg_obj, logging.Logger) and lg_obj.name != "null_logger":
-            lg_obj.handlers = []
+        if isinstance(lg_obj, logging.Logger):
+            if any(isinstance(h, logging.NullHandler) for h in lg_obj.handlers):
+                continue
+            lg_obj.handlers = [
+                handler
+                for handler in lg_obj.handlers
+                if not isinstance(handler, logging.StreamHandler) or isinstance(handler, logging.FileHandler)
+            ]
             lg_obj.propagate = True
 
 
@@ -390,7 +381,6 @@ def flask_app_logger_setup(
     logger_name: str = "plain_logger",
     config: Optional[str] = None,
     level: Optional[str] = None,
-    env_prefix: str = "LOGGER",
 ) -> logging.Logger:
     """Sets up logging configuration, configures flask to use it, and returns the logger.
 
@@ -399,7 +389,6 @@ def flask_app_logger_setup(
         logger_name:  Name of the logger that needs to be used.
         config: Configuration string or path to configuration file or configuration file via environment variable.
         level: Optional logging level that overrides one in config.
-        env_prefix: Environment variable names prefix for overriding logger configuration.
 
     Returns:
         The logger object.
@@ -409,7 +398,6 @@ def flask_app_logger_setup(
         logger_name=logger_name,
         config=config,
         level=level,
-        env_prefix=env_prefix,
     )
 
     # Apply WSGI middleware to manage correlation ID at the transport layer

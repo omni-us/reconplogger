@@ -58,8 +58,8 @@ The following code snippet illustrates the use:
     logger = reconplogger.logger_setup()
     logger.info('My log message')
 
-    # Json logger and custom prefix
-    logger = reconplogger.logger_setup('json_logger', env_prefix='MYAPP')
+    # Json logger
+    logger = reconplogger.logger_setup('json_logger')
     logger.info('My log message in json format')
 
 This function gives you the ability to set the default logger to use
@@ -67,12 +67,10 @@ This function gives you the ability to set the default logger to use
 optionally provide a logging ``config`` and/or a logging ``level`` that
 overrides the level in the config.
 
-All of these values can be overridden via environment variables whose names are
-prefixed by the value of the ``env_prefix`` argument. The environment variables
-supported are: ``{env_prefix}_CFG``, ``{env_prefix}_NAME`` and
-``{env_prefix}_LEVEL``. Note that the environment variable names are not
-required to be prefixed by the default ``env_prefix='LOGGER'``. The prefix can
-be chosen by the user for each particular application.
+All of these values can be overridden via the ``LOGGER_CFG``, ``LOGGER_NAME``
+and ``LOGGER_LEVEL`` environment variables. When ``LOGGER_ROOT_HANDLER`` is in
+use, the root logger level can be controlled separately via
+``LOGGER_ROOT_LEVEL``.
 
 For functions or classes that receive logger object as an argument, it might be
 desired to set a non-logging default so that it can be called without specifying
@@ -178,6 +176,7 @@ environment variables should be set as:
     LOGGER_NAME: json_logger
     LOGGER_LEVEL: INFO
     LOGGER_ROOT_HANDLER: json_handler
+    LOGGER_ROOT_LEVEL: INFO
 
 Setting ``LOGGER_ROOT_HANDLER`` is the recommended way to ensure that log records
 from third-party libraries (SQLAlchemy, werkzeug, urllib3, etc.) are also
@@ -208,29 +207,34 @@ urllib3, httpx, …) create their own named loggers that propagate records up to
 Python's **root logger**, which reconplogger does not touch unless instructed to.
 
 To capture every log record in the process under the same handler — with no code
-changes — set the ``{env_prefix}_ROOT_HANDLER`` environment variable to the name
+changes — set the ``LOGGER_ROOT_HANDLER`` environment variable to the name
 of the handler you want to use as the single root handler:
 
 .. code-block:: bash
 
     LOGGER_NAME=json_logger
     LOGGER_LEVEL=INFO
-    LOGGER_ROOT_HANDLER=json_handler   # new
+    LOGGER_ROOT_HANDLER=json_handler
+    LOGGER_ROOT_LEVEL=INFO
 
 When ``LOGGER_ROOT_HANDLER`` is set:
 
 1. The named handler is installed on the **root logger**.
-2. The root logger's level is set to ``LOGGER_LEVEL`` (or the handler's
-   own level if ``LOGGER_LEVEL`` is absent).
+2. The root logger's level is set to ``LOGGER_ROOT_LEVEL`` (or the handler's
+    own level if ``LOGGER_ROOT_LEVEL`` is absent).
 3. ``logging.captureWarnings(True)`` is called so ``warnings.warn(...)``
    calls are also captured.
-4. The named logger (e.g. ``json_logger``) has its handlers cleared and
-   ``propagate=True`` set so records flow to the single root handler without
-   duplication.
-5. All other named loggers in the config also have their handlers cleared for
-   the same reason.
+4. The named logger (e.g. ``json_logger``) has its stream handlers removed and
+    ``propagate=True`` set so records flow to the single root handler without
+    duplicate stream output.
+5. All other named loggers in the config also have their stream handlers
+    removed for the same reason, while non-stream handlers such as file
+    handlers remain attached.
 6. Subsequent calls to :func:`~reconplogger.logger_setup` return the same
    primary logger (singleton behaviour).
+7. To apply a new configuration after the first call, run
+    :func:`~reconplogger.reset_configs` and then call
+    :func:`~reconplogger.logger_setup` again.
 
 
 ``flask_app_logger_setup`` manages correlation ID handling internally for Flask,
@@ -331,7 +335,7 @@ Then, in the python code the logger would be used as follows:
 .. code-block:: python
 
     >>> import reconplogger
-    >>> logger = reconplogger.logger_setup(env_prefix='LOGGER')
+    >>> logger = reconplogger.logger_setup()
     >>> logger.error('My error message')
     ERROR 2019-10-18 14:45:22,629 <stdin> 16876 139918773925696 My error message
 
