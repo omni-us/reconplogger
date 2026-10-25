@@ -14,7 +14,7 @@ from io import StringIO
 from typing import Iterator
 from unittest.mock import patch
 
-from testfixtures import Comparison, LogCapture, compare
+from testfixtures import Comparison, LogCapture, LoggingSource, compare
 
 import reconplogger
 
@@ -57,7 +57,7 @@ class TestReconplogger(unittest.TestCase):
         reconplogger.load_config("reconplogger_default_cfg")
         logger = logging.getLogger("plain_logger")
         info_msg = "info message"
-        with LogCapture(names="plain_logger") as log:
+        with LogCapture(LoggingSource(("name", "levelname", "getMessage"), names=("plain_logger",))) as log:
             logger.info(info_msg)
             log.check(("plain_logger", "INFO", info_msg))
 
@@ -79,7 +79,7 @@ class TestReconplogger(unittest.TestCase):
         logger = logging.getLogger("json_logger")
         error_msg = "error message"
         exception = RuntimeError("Exception message")
-        with LogCapture(names="json_logger") as log:
+        with LogCapture(LoggingSource(("name", "levelname", "getMessage"), names=("json_logger",))) as log:
             try:
                 raise exception
             except Exception:
@@ -91,7 +91,7 @@ class TestReconplogger(unittest.TestCase):
         """Test logger_setup without specifying environment variable names."""
         logger = reconplogger.logger_setup()
         info_msg = "info message"
-        with LogCapture(names="plain_logger") as log:
+        with LogCapture(LoggingSource(("name", "levelname", "getMessage"), names=("plain_logger",))) as log:
             logger.info(info_msg)
             log.check(("plain_logger", "INFO", info_msg))
 
@@ -99,7 +99,7 @@ class TestReconplogger(unittest.TestCase):
         """Test logger_setup without specifying environment variable names but changing logger name."""
         logger = reconplogger.logger_setup(logger_name="json_logger")
         info_msg = "info message"
-        with LogCapture(names="json_logger") as log:
+        with LogCapture(LoggingSource(("name", "levelname", "getMessage"), names=("json_logger",))) as log:
             logger.info(info_msg)
             log.check(("json_logger", "INFO", info_msg))
 
@@ -164,7 +164,7 @@ class TestReconplogger(unittest.TestCase):
     def test_logger_setup_env_vars(self):
         logger = reconplogger.logger_setup()
         info_msg = "info message env logger"
-        with LogCapture(names="example_logger") as log:
+        with LogCapture(LoggingSource(("name", "levelname", "getMessage"), names=("example_logger",))) as log:
             logger.info(info_msg)
             log.check(("example_logger", "INFO", info_msg))
 
@@ -214,7 +214,7 @@ class TestReconplogger(unittest.TestCase):
         assert app.after_request_funcs
         flask_msg = "flask message"
         werkzeug_msg = "werkzeug message"
-        with LogCapture(names=(app.logger.name, "werkzeug")) as log:
+        with LogCapture(LoggingSource(("name", "levelname", "getMessage"), names=(app.logger.name, "werkzeug"))) as log:
             app.logger.warning(flask_msg)  # pylint: disable=no-member
             logging.getLogger("werkzeug").warning(werkzeug_msg)
             log.check_present(
@@ -245,7 +245,7 @@ class TestReconplogger(unittest.TestCase):
             return "correlation_id=" + str(correlation_id)
 
         client = app.test_client()
-        with LogCapture(names=app.logger.name, attributes=("name", "levelname")) as logs:
+        with LogCapture(LoggingSource(names=(app.logger.name,)), attributes=("name", "levelname")) as logs:
             response = client.get("/")
             logs.check((app.logger.name, "ERROR"))
         self.assertEqual(response.status_code, 500)
@@ -258,7 +258,7 @@ class TestReconplogger(unittest.TestCase):
 
         # Check correlation id propagation
         with LogCapture(
-            names=app.logger.name,
+            LoggingSource(names=(app.logger.name,)),
             attributes=("name", "levelname", "getMessage", "correlation_id"),
         ) as logs:
             correlation_id = str(uuid.uuid4())
@@ -270,7 +270,7 @@ class TestReconplogger(unittest.TestCase):
             )
         # Check missing correlation id
         with LogCapture(
-            names=app.logger.name,
+            LoggingSource(names=(app.logger.name,)),
             attributes=("name", "levelname", "getMessage", "correlation_id"),
         ) as logs:
             client.get("/")
@@ -282,7 +282,7 @@ class TestReconplogger(unittest.TestCase):
             )
         # Check set correlation id
         with LogCapture(
-            names=app.logger.name,
+            LoggingSource(names=(app.logger.name,)),
             attributes=("name", "levelname", "getMessage", "correlation_id"),
         ) as logs:
             correlation_id = str(uuid.uuid4())

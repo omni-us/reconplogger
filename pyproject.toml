@@ -44,7 +44,7 @@ all = [
 test = [
     "pytest>=6.2.5",
     "pytest-cov>=4.0.0",
-    "testfixtures==6.10.0",
+    "testfixtures>=12",
 ]
 dev = [
     "reconplogger[all]",
@@ -70,7 +70,6 @@ Documentation-latest = "https://reconplogger.readthedocs.io/en/latest/"
 GitHub = "https://github.com/omni-us/reconplogger"
 PyPI = "https://pypi.org/project/reconplogger"
 Codecov = "https://codecov.io/gh/omni-us/reconplogger"
-
 
 [tool.setuptools]
 platforms = ["Any"]
